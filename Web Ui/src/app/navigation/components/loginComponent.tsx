@@ -25,14 +25,24 @@ export default function LoginComponent({
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  const handleLogin = async () => {
-    const userData = await fireBaseAuthManager.loginWithOAuth(OAuthProvider.Google);
-    if (userData?.email) {
-      const idToken = await userData.getIdToken();
-      const loginPort = new CheckIfUserHasAccount();
-      const userAccount = await loginPort.userHasAnAccountWithToken(idToken);
-      setCookieAndGlobalStateForValidUser(userData, userAccount);
-    }
+  const handleLogin = () => {
+    fireBaseAuthManager
+      .loginWithOAuth(OAuthProvider.Google)
+      .then(async (userData) => {
+        if (userData?.email) {
+          const idToken = await userData.getIdToken();
+          const loginPort = new CheckIfUserHasAccount();
+          const userAccount = await loginPort.userHasAnAccountWithToken(idToken);
+          setCookieAndGlobalStateForValidUser(userData, userAccount);
+        }
+      })
+      .catch((error) => {
+        if (error?.code === "auth/popup-blocked") {
+          alert("Safari bloqueó la ventana emergente. Habilita los pop-ups para iniciar sesión.");
+        } else {
+          console.error("Error de autenticación:", error);
+        }
+      });
   };
 
   const handleLogout = async () => {

@@ -14,8 +14,12 @@ class FirebaseAuthManager{
     [OAuthProvider.Google]: new GoogleAuthProvider(),
     [OAuthProvider.Github]: new GithubAuthProvider()
   };
-  async loginWithOAuth(provider: OAuthProvider): Promise<User>{
+  async loginWithOAuth(provider: OAuthProvider): Promise<User> {
     const firebaseProvider = this.oAuthProviders[provider];
+
+    if (firebaseProvider instanceof GoogleAuthProvider) {
+      firebaseProvider.setCustomParameters({ prompt: "select_account" });
+    }
     try {
       const result = await signInWithPopup(auth, firebaseProvider);
       return result.user;
