@@ -6,10 +6,11 @@ import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const repository = new PracticeRepositoryBuilder(connectionFactory);
-const practicesController = new PracticesController(repository);
+const practicesController = new PracticesController(repository, new PinoLogger());
 const practicesRouter = express.Router();
 
 //Create a new Practice

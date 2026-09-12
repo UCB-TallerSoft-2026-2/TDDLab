@@ -5,11 +5,12 @@ import AssignmentController from "../controllers/assignments/assignmentControlle
 
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const repository = new AssignmentRepositoryBuilder(connectionFactory);
-const assignmentController = new AssignmentController(repository); // Pass the repository instance to the controller
+const assignmentController = new AssignmentController(repository, new PinoLogger()); // Pass the repository instance to the controller
 import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
 const assignmentsRouter = express.Router();
 

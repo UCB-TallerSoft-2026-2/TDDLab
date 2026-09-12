@@ -6,6 +6,7 @@ import GetPracticesByIdUseCase from "../../modules/Practices/application/Practic
 import GetPracticesByUserIdUseCase from "../../modules/Practices/application/PracticeUseCases/getPracticesByUserIdUseCase";
 import UpdatePracticeUseCase from "../../modules/Practices/application/PracticeUseCases/updatePracticeUseCase";
 import { IPracticeRepository } from "../../modules/Practices/domain/IPracticeRepository";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class PracticesController {
   private readonly createPracticeUseCase: CreatePracticeUseCase;
@@ -14,14 +15,16 @@ class PracticesController {
   private readonly getPracticesUseCase: GetPracticesUseCase;
   private readonly getPracticeByIdUseCase: GetPracticesByIdUseCase;
   private readonly getPracticesByUserIdUseCase: GetPracticesByUserIdUseCase;
+  private readonly logger: ILogger;
 
-  constructor(repository: IPracticeRepository) {
+  constructor(repository: IPracticeRepository, logger: ILogger) {
     this.createPracticeUseCase = new CreatePracticeUseCase(repository);
     this.deletePracticeUseCase = new DeletePracticeUseCase(repository);
     this.getPracticeByIdUseCase = new GetPracticesByIdUseCase(repository);
     this.getPracticesByUserIdUseCase = new GetPracticesByUserIdUseCase(repository);
     this.getPracticesUseCase = new GetPracticesUseCase(repository);
     this.updatePracticeUseCase = new UpdatePracticeUseCase(repository);
+    this.logger = logger.child("PracticesController");
   }
 
   async getPractices(_req: Request, res: Response): Promise<void> {
@@ -29,6 +32,7 @@ class PracticesController {
       const practices = await this.getPracticesUseCase.execute();
       res.status(200).json(practices);
     } catch (error) {
+      this.logger.error("Error al obtener las Practicas:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -39,6 +43,7 @@ class PracticesController {
       const practice = await this.getPracticeByIdUseCase.execute(id);
       res.status(200).json(practice);
     } catch (error) {
+      this.logger.error("Error al obtener la Practica por ID:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -49,6 +54,7 @@ class PracticesController {
       const practices = await this.getPracticesByUserIdUseCase.execute(userid);
       res.status(200).json(practices);
     } catch (error) {
+      this.logger.error("Error al obtener las Practicas por UserID:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -65,6 +71,7 @@ class PracticesController {
       });
       res.status(201).json(newPractice);
     } catch (error) {
+      this.logger.error("Error al crear la Practica:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -75,6 +82,7 @@ class PracticesController {
       await this.deletePracticeUseCase.execute(id);
       res.status(204).send();
     } catch (error) {
+      this.logger.error("Error al eliminar la Practica:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -100,6 +108,7 @@ class PracticesController {
         res.status(404).json({ error: "Practice not found" });
       }
     } catch (error) {
+      this.logger.error("Error al actualizar la Practica:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }

@@ -6,8 +6,10 @@ import GetGroupsUseCase from "../../modules/Groups/application/GroupUseCases/get
 import UpdateGroupUseCase from "../../modules/Groups/application/GroupUseCases/updateGroupUseCase";
 import { IGroupRepository } from "../../modules/Groups/domain/IGroupRepository";
 import CheckGroupExistsUseCase from "../../modules/Groups/application/GroupUseCases/checkGroupUseCase";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class GroupsController {
+  private readonly logger: ILogger;
   private readonly createGroupUseCase: CreateGroupUseCase;
   private readonly deleteGroupUseCase: DeleteGroupUseCase;
   private readonly getGroupByIdUseCase: GetGroupByIdUseCase;
@@ -15,13 +17,14 @@ class GroupsController {
   private readonly updateGroupUseCase: UpdateGroupUseCase;
   private readonly checkGroupExistsUseCase: CheckGroupExistsUseCase;
 
-  constructor(repository: IGroupRepository) {
+  constructor(repository: IGroupRepository, logger: ILogger) {
     this.createGroupUseCase = new CreateGroupUseCase(repository);
     this.deleteGroupUseCase = new DeleteGroupUseCase(repository);
     this.getGroupByIdUseCase = new GetGroupByIdUseCase(repository);
     this.getGroupsUseCase = new GetGroupsUseCase(repository);
     this.updateGroupUseCase = new UpdateGroupUseCase(repository);
     this.checkGroupExistsUseCase = new CheckGroupExistsUseCase(repository);
+    this.logger = logger.child("GroupsController");
   }
 
   async getGroups(_req: Request, res: Response): Promise<void> {
@@ -29,6 +32,7 @@ class GroupsController {
       const groups = await this.getGroupsUseCase.execute();
       res.status(200).json(groups);
     } catch (error) {
+      this.logger.error("Error getting groups", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -43,6 +47,7 @@ class GroupsController {
         res.status(404).json({ error: "Group not found" });
       }
     } catch (error) {
+      this.logger.error("Error getting group by id", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -58,7 +63,7 @@ class GroupsController {
           .json({ error: "Invalid groupid. Group does not exist." });
       }
     } catch (error) {
-      console.error("ERROR :", error)
+      this.logger.error("Error checking group exists", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -74,7 +79,7 @@ class GroupsController {
       });
       res.status(201).json(newGroup);
     } catch (error) {
-      console.error("ERROR CREANDO GRUPO:", error)
+      this.logger.error("Error creating group", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -85,7 +90,7 @@ class GroupsController {
       await this.deleteGroupUseCase.execute(groupid);
       res.status(204).send();
     } catch (error) {
-      console.error("ERROR ELIMINANDO GRUPO:", error)
+      this.logger.error("Error deleting group", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -110,6 +115,7 @@ class GroupsController {
         res.status(404).json({ error: "Group not found" });
       }
     } catch (error) {
+      this.logger.error("Error updating group", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }

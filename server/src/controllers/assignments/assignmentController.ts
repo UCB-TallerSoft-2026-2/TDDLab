@@ -7,6 +7,7 @@ import UpdateAssignmentUseCase from "../../modules/Assignments/application/Assig
 import { IAssignmentRepository } from "../../modules/Assignments/domain/IAssignmentRepository";
 import DeliverAssignmentUseCase from "../../modules/Assignments/application/AssignmentUseCases/deliverAssignmentaUseCase";
 import GetAssignmentsByGroupIdUseCase from "../../modules/Assignments/application/AssignmentUseCases/getAssignmentsByGroupIdUseCase";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class AssignmentController {
   private readonly createAssignmentUseCase: CreateAssignmentUseCase;
@@ -16,8 +17,9 @@ class AssignmentController {
   private readonly getAssignmentsUseCase: GetAssignmentsUseCase;
   private readonly updateAssignmentUseCase: UpdateAssignmentUseCase;
   private readonly deliverAssignmentUseCase: DeliverAssignmentUseCase;
+  private readonly logger: ILogger;
 
-  constructor(repository: IAssignmentRepository) {
+  constructor(repository: IAssignmentRepository, logger: ILogger) {
     this.createAssignmentUseCase = new CreateAssignmentUseCase(repository);
     this.deleteAssignmentUseCase = new DeleteAssignmentUseCase(repository);
     this.getAssignmentByIdUseCase = new GetAssignmentByIdUseCase(repository);
@@ -27,6 +29,7 @@ class AssignmentController {
     this.getAssignmentsUseCase = new GetAssignmentsUseCase(repository);
     this.updateAssignmentUseCase = new UpdateAssignmentUseCase(repository);
     this.deliverAssignmentUseCase = new DeliverAssignmentUseCase(repository);
+    this.logger = logger.child("AssignmentController");
   }
 
   async getAssignments(_req: Request, res: Response): Promise<void> {
@@ -34,6 +37,7 @@ class AssignmentController {
       const assignments = await this.getAssignmentsUseCase.execute();
       res.status(200).json(assignments);
     } catch (error) {
+      this.logger.error("Error getting assignments", { error: error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -46,6 +50,7 @@ class AssignmentController {
       );
       res.status(200).json(assignments);
     } catch (error) {
+      this.logger.error("Error getting assignments by group id", { error: error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -62,6 +67,7 @@ class AssignmentController {
         res.status(404).json({ error: "Assignments not found" });
       }
     } catch (error) {
+      this.logger.error("Error getting assignment by id", { error: error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -99,13 +105,12 @@ async createAssignment(req: Request, res: Response): Promise<void> {
     }
 
     // DEBUG: ver qué llega antes de llamar al use case
-    console.log("createAssignment payload:", {
+    this.logger.debug("createAssignment payload", {
       title,
       groupid,
       rawGroupId,
       typeof_rawGroupId: typeof rawGroupId,
     });
-
     const newAssignment = await this.createAssignmentUseCase.execute({
       title,
       description,
@@ -119,6 +124,7 @@ async createAssignment(req: Request, res: Response): Promise<void> {
 
     res.status(201).json(newAssignment);
   } catch (error) {
+    this.logger.error("Unexpected error: ", { err: error });
     if (error instanceof Error) {
       if (error.message === "Ya existe una tarea con el mismo nombre en este grupo") {
         res.status(400).json({ error: error.message });
@@ -128,11 +134,9 @@ async createAssignment(req: Request, res: Response): Promise<void> {
           message: `El titulo no puede tener mas de 50 caracteres.`,
         });
       } else {
-        console.error("Unexpected error: ", error);
         res.status(500).json({ error: "Server error" });
       }
     } else {
-      console.error("Unexpected error: ", error);
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -145,7 +149,7 @@ async createAssignment(req: Request, res: Response): Promise<void> {
       const assignmentId = parseInt(req.params.id, 10);
 
       console.log('=== INICIANDO ELIMINACIÓN ===');
-      
+
       if (!assignmentId) {
         res.status(400).json({
           success: false,
@@ -172,12 +176,7 @@ async createAssignment(req: Request, res: Response): Promise<void> {
       });
 
     } catch (error: any) {
-      console.error('Error eliminando assignment:', error);
-      console.error('=== ERROR EN ELIMINACIÓN ===');
-      console.error('Mensaje:', error.message);
-      console.error('Stack:', error.stack);
-      console.error('Código PostgreSQL:', error.code);
-
+      this.logger.error("Error deleting assignment", { err: error });
       if (error.message === "Tarea no encontrada") {
         res.status(404).json({
           success: false,
@@ -216,6 +215,7 @@ async createAssignment(req: Request, res: Response): Promise<void> {
         res.status(404).json({ error: "Assignment not found" });
       }
     } catch (error) {
+      this.logger.error("Error delivering assignment", { err: error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -253,6 +253,7 @@ async createAssignment(req: Request, res: Response): Promise<void> {
         res.status(404).json({ error: "Assignment not found" });
       }
     } catch (error) {
+      this.logger.error("Unexpected error: ", { err: error });
       if (error instanceof Error) {
         if (error.message === "Ya existe una tarea con el mismo nombre en este grupo") {
         res.status(400).json({ error: error.message });

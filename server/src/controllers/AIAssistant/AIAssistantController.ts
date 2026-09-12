@@ -7,6 +7,7 @@ import { IAIAssistantDataBaseRepository } from '../../modules/AIAssistant/reposi
 import { AnalyzeTDDCodeUseCase } from '../../modules/AIAssistant/application/AIAssistantUseCases/analyzeTDDCodeUseCase';
 import { ChatbotCodeUseCase } from '../../modules/AIAssistant/application/AIAssistantUseCases/chatbotCodeUseCase';
 import { ChatbotAssistantRepository } from '../../modules/AIAssistant/repository/ChatbotAssistantRepository';
+import { ILogger } from '../../modules/Shared/Domain/Logging/ILogger';
 
 export default class AIAssistantController {
 
@@ -15,17 +16,20 @@ export default class AIAssistantController {
     private readonly updatePromptsUseCase: UpdatePromptsCodeUseCase;
     private readonly analyzeTDDUseCase: AnalyzeTDDCodeUseCase;
     private readonly chatbotUseCase: ChatbotCodeUseCase;
+    private readonly logger: ILogger;
 
     constructor(
         repository: AIAssistantRepository,
         repositoryDB: IAIAssistantDataBaseRepository,
-        repositoryChatBot: ChatbotAssistantRepository
+        repositoryChatBot: ChatbotAssistantRepository,
+        logger: ILogger,
     ) {
         this.analyzeOrRefactorUseCase = new AnalyzeOrRefactorCodeUseCase(repositoryChatBot);
         this.getPromptsUseCase = new GetPromptsCodeUseCase(repositoryDB);
         this.updatePromptsUseCase = new UpdatePromptsCodeUseCase(repositoryDB);
         this.analyzeTDDUseCase = new AnalyzeTDDCodeUseCase(repository);
         this.chatbotUseCase = new ChatbotCodeUseCase(repositoryChatBot);
+        this.logger = logger.child("AIAssistantController");
     }
 
     async analyzeOrRefactor(req: Request, res: Response): Promise<void> {
@@ -40,7 +44,7 @@ export default class AIAssistantController {
             const result = await this.analyzeOrRefactorUseCase.execute(instruction);
             res.json(result);
         } catch (err) {
-            console.error('[CONTROLLER ERROR] analyzeOrRefactor:', err);
+            this.logger.error('Error analyze Or refactor code:', { err });
             res.status(500).json({ error: 'Error procesando el prompt' });
         }
     }
@@ -50,6 +54,7 @@ export default class AIAssistantController {
             const prompts = await this.getPromptsUseCase.execute();
             res.status(200).json(prompts);
         } catch (error) {
+            this.logger.error('Error get prompts:', { error });
             res.status(500).json({ error: "Server error" });
         }
     }
@@ -62,6 +67,7 @@ export default class AIAssistantController {
 
             res.status(200).json(updatedPrompts);
         } catch (error) {
+            this.logger.error('Error update prompts:', { error });
             res.status(500).json({ error: "Server error" });
         }
     }
@@ -90,8 +96,8 @@ export default class AIAssistantController {
                 analysis: result
             });
         } catch (error: unknown) {
-            console.error('[CONTROLLER ERROR] analyzeTDDFromExtension:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Error desconocido al analizar el código';
+          const errorMessage = error instanceof Error ? error.message : 'Error desconocido al analizar el código';
+          this.logger.error('Error analyze TDD code:', { error });
             res.status(500).json({
                 error: "Error al analizar el código",
                 details: errorMessage
@@ -111,10 +117,9 @@ export default class AIAssistantController {
             const response = await this.chatbotUseCase.execute(userInput);
             res.json(response);
         } catch (err) {
+          this.logger.error('Error chat bot:', { err });
             res.status(500).json({ error: 'Error procesando la solicitud del chatbot' });
         }
     }
 
 }
-
-

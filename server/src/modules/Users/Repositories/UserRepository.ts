@@ -28,7 +28,7 @@ export class UserRepository implements IUserRepository {
   async registerUser(user: UserCreationObect) {
     const client = await this.pool.connect();
     try {
-      const query = "INSERT INTO usersTable (email,groupid,role) VALUES ($1, $2, $3)";
+      const query = "INSERT INTO userstable (email,groupid,role) VALUES ($1, $2, $3)";
       const values = [user.email, user.groupid, user.role];
 
       await client.query(query, values);
@@ -41,7 +41,7 @@ export class UserRepository implements IUserRepository {
     }
   }
   async obtainUserByemail(email: string): Promise<User | null> {
-    const query = "SELECT id, email, groupid, role FROM usersTable WHERE email = $1";
+    const query = "SELECT id, email, groupid, role FROM userstable WHERE email = $1";
     const values = [email];
     const rows = await this.executeQuery(query, values);
     if (rows.length >= 1) {
@@ -64,7 +64,7 @@ export class UserRepository implements IUserRepository {
     return null;
   }
   async obtainUsers(): Promise<User[] | null> {
-    const query = "SELECT id, email, groupid, role FROM usersTable";
+    const query = "SELECT id, email, groupid, role FROM userstable";
     const rows = await this.executeQuery(query);
     return rows.length > 0 ? rows : null;
   }
@@ -79,7 +79,7 @@ export class UserRepository implements IUserRepository {
   async removeUserFromGroup(userId: number): Promise<void> {
     const query = "DELETE FROM userstable WHERE id = $1";
     const values = [userId];
-  
+
     try {
       await this.executeQuery(query, values);
       console.log(`Usuario con ID ${userId} ha sido eliminado`);
@@ -88,7 +88,7 @@ export class UserRepository implements IUserRepository {
       throw error; // Relanzar error para manejarlo en capas superiores
     }
   }
-  
+
   async updateUser(
     id: number,
     groupid: number,
@@ -102,5 +102,5 @@ export class UserRepository implements IUserRepository {
     }
     return null;
   }
-  
+
 }

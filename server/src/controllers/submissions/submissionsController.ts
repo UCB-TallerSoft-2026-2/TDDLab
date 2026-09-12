@@ -6,6 +6,7 @@ import UpdateSubmission from "../../modules/Submissions/Aplication/updateSubmiss
 import DeleteSubmission from "../../modules/Submissions/Aplication/DeleteSubmissionUseCase";
 import GetSubmissionUseCase from "../../modules/Submissions/Aplication/getSubmissionUseCase";
 import GetSubmissionsByAssignmentIdUseCase from "../../modules/Submissions/Aplication/getSubmissionsByAssignmentIdUseCase";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class SubmissionController {
   private readonly createSubmissionUseCase: CreateSubmission;
@@ -14,8 +15,9 @@ class SubmissionController {
   private readonly deleteSubmissionUSeCase: DeleteSubmission;
   private readonly getSubmissionUseCase: GetSubmissionUseCase;
   private readonly getSubmissionsByAssignmentIdUseCase: GetSubmissionsByAssignmentIdUseCase;
+  private readonly logger: ILogger;
 
-  constructor(repository: ISubmissionsRepository) {
+  constructor(repository: ISubmissionsRepository, logger: ILogger) {
     this.createSubmissionUseCase = new CreateSubmission(repository);
     this.getSubmissionsUseCase = new GetSubmissionsUseCase(repository);
     this.getSubmissionUseCase = new GetSubmissionUseCase(repository);
@@ -23,6 +25,7 @@ class SubmissionController {
     this.deleteSubmissionUSeCase = new DeleteSubmission(repository);
     this.getSubmissionsByAssignmentIdUseCase =
       new GetSubmissionsByAssignmentIdUseCase(repository);
+    this.logger = logger.child("SubmissionsController");
   }
 
   async CreateSubmission(req: Request, res: Response): Promise<void> {
@@ -38,6 +41,7 @@ class SubmissionController {
       });
       res.status(201).json(newSubmission);
     } catch (error) {
+      this.logger.error("Error al crear la Submission:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -47,6 +51,7 @@ class SubmissionController {
       const assignments = await this.getSubmissionsUseCase.execute();
       res.status(200).json(assignments);
     } catch (error) {
+      this.logger.error("Error al obtener las Submissions:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -67,6 +72,7 @@ class SubmissionController {
         res.status(404).json({ message: "Submission not found" });
       }
     } catch (error) {
+      this.logger.error("Error al obtener la Submission:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -89,6 +95,7 @@ class SubmissionController {
         res.status(404).json({ error: "Submission not found" });
       }
     } catch (error) {
+      this.logger.error("Error al actualizar la Submission:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -99,6 +106,7 @@ class SubmissionController {
       await this.deleteSubmissionUSeCase.execute(submissionid);
       res.status(204).send();
     } catch (error) {
+      this.logger.error("Error al eliminar la Submission:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -113,6 +121,7 @@ class SubmissionController {
         await this.getSubmissionsByAssignmentIdUseCase.execute(assignmentid);
       res.status(200).json(assignments);
     } catch (error) {
+      this.logger.error("Error al obtener las Submissions por assignmentId:", {err: error});
       res.status(500).json({ error: "Error getSubmissionsByAssignmentId" });
     }
   }

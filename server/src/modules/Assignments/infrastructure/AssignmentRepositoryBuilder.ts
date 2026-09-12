@@ -146,7 +146,7 @@ export class AssignmentRepositoryBuilder implements IAssignmentRepository {
   }
 
   async groupidExistsForAssigment(groupid: number): Promise<boolean> {
-    const query = "SELECT EXISTS (SELECT 1 FROM groups WHERE id = $1)";
+    const query = "SELECT EXISTS (SELECT 1 FROM Groups WHERE id = $1)";
     const result = await this.executeQuery(query, [groupid]);
     return result[0].exists;
   }

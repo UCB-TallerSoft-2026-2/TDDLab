@@ -45,7 +45,7 @@ class GroupRepository implements IGroupRepository {
   }
 
   async checkGroupExists(groupid: number): Promise<boolean> {
-    const query = "SELECT EXISTS (SELECT 1 FROM groups WHERE id = $1)";
+    const query = "SELECT EXISTS (SELECT 1 FROM Groups WHERE id = $1)";
     const result: QueryResult[] = await this.executeQuery(query, [groupid]);
     return result[0].exists;
   }
@@ -67,7 +67,7 @@ class GroupRepository implements IGroupRepository {
       const deleteAssignmentsQuery = "DELETE FROM assignments WHERE groupid = $1";
       await client.query(deleteAssignmentsQuery, [id]);
 
-      const deleteGroupQuery = "DELETE FROM groups WHERE id = $1";
+      const deleteGroupQuery = "DELETE FROM Groups WHERE id = $1";
       await client.query(deleteGroupQuery, [id]);
 
       await client.query('COMMIT');

@@ -16,13 +16,13 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 const port = 3000;
-
 const allowedOrigins = [
   process.env.VITE_FRONT_URL,
   "http://localhost:5173",
   "http://localhost:5000",
   "https://tddlab-staging-firebase.web.app",
 ].filter((origin): origin is string => Boolean(origin));
+
 
 app.use(
   cors({

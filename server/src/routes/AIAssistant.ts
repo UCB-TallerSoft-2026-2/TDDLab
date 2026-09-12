@@ -8,6 +8,7 @@ import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const aiAssistantRepository = new AIAssistantRepository();
@@ -16,7 +17,8 @@ const chatbotAssistantRepository = new ChatbotAssistantRepository();
 const aiAssistantController = new AIAssistantController(
   aiAssistantRepository,
   aiAssistantDBRepository,
-  chatbotAssistantRepository
+  chatbotAssistantRepository,
+  new PinoLogger(),
 );
 
 const aiAssistantRouter = express.Router();

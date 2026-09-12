@@ -6,9 +6,10 @@ import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const repository = new GroupRepositoryBuilder(connectionFactory);
-const groupController = new GroupsController(repository);
+const groupController = new GroupsController(repository, new PinoLogger());
 
 const groupsRouter = express.Router();
 

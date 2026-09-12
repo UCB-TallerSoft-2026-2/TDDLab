@@ -29,6 +29,7 @@ export class PostgresTeacherCommentRepository implements ITeacherCommentReposito
         .build();
 
       const result = await connection.query(query, params);
+      console.log("result", result)
       return result.rows[0];
     } catch (error) {
       console.error("Error inserting teacher comment:", error);
@@ -43,12 +44,16 @@ export class PostgresTeacherCommentRepository implements ITeacherCommentReposito
   async getTeacherCommentsBySubmission(submission_id: number): Promise<TeacherComment[]> {
     const options = new TeacherCommentsOptions()
       .bySubmissionId(submission_id);
+    console.log("submission_id", submission_id);
     const { query, params } = queryBuilderFactory
       .create(TeacherCommentsSchema)
       .select()
       .where(options)
       .build();
+    console.log("query", query);
+    console.log("params", params);
     const rows = await this.executeQuery(query, params);
+    console.log("rows", rows);
     return rows;
   }
 
@@ -62,7 +67,9 @@ export class PostgresTeacherCommentRepository implements ITeacherCommentReposito
   async submissionExists(submission_id: number): Promise<boolean> {
     const query = "SELECT 1 FROM submissions WHERE id = $1";
     const values = [submission_id];
+    console.log("submission_id", submission_id);
     const result = await this.executeQuery(query, values);
+    console.log("result", result)
     return result.length > 0;
   }
 }

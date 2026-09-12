@@ -6,6 +6,7 @@ import UpdatePracticeSubmission from "../../modules/PracticeSubmissions/Applicat
 import DeletePracticeSubmission from "../../modules/PracticeSubmissions/Application/DeletePracticeSubmissionUseCase";
 import GetPracticeSubmissionByPracticeAndUserUseCase from "../../modules/PracticeSubmissions/Application/getPracticeSubmissionByPracticeAndUserUseCase";
 import GetPracticeSubmissionsByPracticeIdUseCase from "../../modules/PracticeSubmissions/Application/getPracticeSubmissionsByPracticeIdUseCase";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class PracticeSubmissionController {
   private readonly createPracticeSubmissionUseCase: CreatePracticeSubmission;
@@ -14,8 +15,9 @@ class PracticeSubmissionController {
   private readonly deletePracticeSubmissionUSeCase: DeletePracticeSubmission;
   private readonly getPracticeSubmissionUseCase: GetPracticeSubmissionByPracticeAndUserUseCase;
   private readonly getPracticeSubmissionsByPracticeIdUseCase: GetPracticeSubmissionsByPracticeIdUseCase;
+  private readonly logger: ILogger;
 
-  constructor(repository: IPracticeSubmissionRepository) {
+  constructor(repository: IPracticeSubmissionRepository, logger: ILogger) {
     this.createPracticeSubmissionUseCase = new CreatePracticeSubmission(repository);
     this.getPracticeSubmissionsUseCase = new GetPracticeSubmissionsUseCase(repository);
     this.getPracticeSubmissionUseCase = new GetPracticeSubmissionByPracticeAndUserUseCase(repository);
@@ -23,6 +25,7 @@ class PracticeSubmissionController {
     this.deletePracticeSubmissionUSeCase = new DeletePracticeSubmission(repository);
     this.getPracticeSubmissionsByPracticeIdUseCase =
       new GetPracticeSubmissionsByPracticeIdUseCase(repository);
+    this.logger = logger.child("PracticeSubmissionController");
   }
 
   async CreatePracticeSubmission(req: Request, res: Response): Promise<void> {
@@ -38,6 +41,7 @@ class PracticeSubmissionController {
       });
       res.status(201).json(newPracticeSubmission);
     } catch (error) {
+      this.logger.error('Error creating practice submission:', { error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -47,6 +51,7 @@ class PracticeSubmissionController {
       const practices = await this.getPracticeSubmissionsUseCase.execute();
       res.status(200).json(practices);
     } catch (error) {
+      this.logger.error('Error getting practice submissions:', { error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -67,7 +72,7 @@ class PracticeSubmissionController {
         res.status(404).json({ message: "Submission not found" });
       }
     } catch (error) {
-      console.log(error)
+      this.logger.error('Error getting practice submission by practice and user:', { error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -90,6 +95,7 @@ class PracticeSubmissionController {
         res.status(404).json({ error: "Practice Submission not found" });
       }
     } catch (error) {
+      this.logger.error('Error updating practice submission:', { error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -100,6 +106,7 @@ class PracticeSubmissionController {
       await this.deletePracticeSubmissionUSeCase.execute(practiceSubmissionid);
       res.status(204).send();
     } catch (error) {
+      this.logger.error('Error deleting practice submission:', { error });
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -114,6 +121,7 @@ class PracticeSubmissionController {
         await this.getPracticeSubmissionsByPracticeIdUseCase.execute(practiceid);
       res.status(200).json(practices);
     } catch (error) {
+      this.logger.error('Error getting practice submissions by practice id:', { error });
       res.status(500).json({ error: "Error getSubmissionsByPracticeId" });
     }
   }

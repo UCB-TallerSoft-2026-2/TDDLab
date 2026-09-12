@@ -28,11 +28,11 @@ class AssignmentRepository implements IAssignmentRepository {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      
+
       for (const { query, values } of queries) {
         await client.query(query, values);
       }
-      
+
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -181,11 +181,11 @@ class AssignmentRepository implements IAssignmentRepository {
   }
 
   async groupidExistsForAssigment(groupid: number): Promise<boolean> {
-    const query = "SELECT EXISTS (SELECT 1 FROM groups WHERE id = $1)";
+    const query = "SELECT EXISTS (SELECT 1 FROM Groups WHERE id = $1)";
     const result: QueryResult[] = await this.executeQuery(query, [groupid]);
     return result[0].exists;
   }
 
 }
-  
+
 export default AssignmentRepository;

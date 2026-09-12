@@ -2,17 +2,20 @@ import { Request, Response } from "express";
 import { ITeacherCommentRepository } from "../../modules/TeacherCommentsOnSubmissions/Domain/ITeacherCommentRepository";
 import { createTeacherComment } from "../../modules/TeacherCommentsOnSubmissions/Application/CreateTeacherComment";
 import { getTeacherComments } from "../../modules/TeacherCommentsOnSubmissions/Application/getTeacherComments";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 export class TeacherCommentController {
   private readonly teacherCommentRepository: ITeacherCommentRepository;
+  private readonly logger: ILogger;
 
-  constructor(teacherCommentRepository: ITeacherCommentRepository) {
+  constructor(teacherCommentRepository: ITeacherCommentRepository, logger: ILogger) {
     this.teacherCommentRepository = teacherCommentRepository;
+    this.logger = logger.child("TeacherCommentsController");
   }
 
   public async addComment(req: Request, res: Response) {
     const { submission_id, teacher_id, content } = req.body;
-  
+
     try {
       const isTeacher = await this.teacherCommentRepository.isTeacher(teacher_id);
       if (!isTeacher) {
@@ -30,11 +33,11 @@ export class TeacherCommentController {
       );
       return res.status(201).json(newComment);
     } catch (error) {
-      console.error("Error adding comment:", error);
+      this.logger.error("Error al agregar comentario:", {err: error});
       return res.status(500).json({ error: "Error creando el comentario" });
     }
   }
-  
+
 
   public async getComments(req: Request, res: Response) {
     const { submission_id } = req.params;
@@ -47,6 +50,7 @@ export class TeacherCommentController {
       const comments = await getTeacherComments(Number(submission_id), this.teacherCommentRepository);
       return res.status(200).json(comments);
     } catch (error) {
+      this.logger.error("Error al obtener comentarios:", {err: error});
       return res.status(500).json({ error: "Error retrieving comments" });
     }
   }

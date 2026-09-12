@@ -4,6 +4,7 @@ import { DBCommitsRepositoryBuilder } from "../modules/TDDCycles/Infrastructure/
 import { DBJobsRepositoryBuilder } from "../modules/TDDCycles/Infrastructure/DBJobsRepositoryBuilder";
 import { GithubRepository } from "../modules/TDDCycles/Repositories/GithubRepository";
 import TDDCyclesController from "../controllers/TDDCycles/TDDCyclesController";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const dbCommitsRepository = new DBCommitsRepositoryBuilder(connectionFactory);
@@ -13,7 +14,8 @@ const githubRepository = new GithubRepository();
 const tddCyclesController = new TDDCyclesController(
   dbCommitsRepository,
   dbJobsRepository,
-  githubRepository
+  githubRepository,
+  new PinoLogger(),
 );
 
 // Create a new router to handle the TDDCycles routes

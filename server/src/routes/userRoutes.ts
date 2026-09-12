@@ -6,10 +6,11 @@ import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
+import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
 const connectionFactory = PostgresConnectionFactory.getInstance();
 const userRepository = new UserRepositoryBuilder(connectionFactory);
-const userController = new UserController(userRepository);
+const userController = new UserController(userRepository,new PinoLogger());
 
 const router = express.Router();
 

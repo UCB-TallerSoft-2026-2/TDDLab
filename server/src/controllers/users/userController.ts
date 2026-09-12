@@ -13,12 +13,15 @@ import { updateUserById } from "../../modules/Users/Application/updateUser";
 import { removeUser } from "../../modules/Users/Application/removeUserFromGroup";
 import { User } from "../../modules/Users/Domain/User";
 import admin from "../../config/firebaseAdmin";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 class UserController {
   private readonly userRepository: IUserRepository;
+  private readonly logger: ILogger;
 
-  constructor(userRepository: IUserRepository) {
+  constructor(userRepository: IUserRepository, logger: ILogger) {
     this.userRepository = userRepository;
+    this.logger = logger.child("UsersController");
   }
   async registerUserController(req: Request, res: Response): Promise<void> {
     const { email, groupid, role } = req.body;
@@ -34,19 +37,19 @@ class UserController {
       await registerUser({ email, groupid, role });
       res.status(201).json({ message: "Usuario registrado con éxito." });
     } catch (error: any) {
-    if (error.message === "UserAlreadyExistsInThatGroup") {
-      res
-        .status(409)
-        .json({ error: "The user is already registered in that group." });
-    } else if (error.message === "No tiene permisos para registrar administradores") {
-      res
-        .status(403)
-        .json({ error: "No tiene permisos para registrar administradores" });
-    } else {
-      res.status(500).json({ error: "Server error while registering user" });
+      this.logger.error("Error al registrar usuario:", {err: error});
+      if (error.message === "UserAlreadyExistsInThatGroup") {
+        res
+          .status(409)
+          .json({ error: "The user is already registered in that group." });
+      } else if (error.message === "No tiene permisos para registrar administradores") {
+        res
+          .status(403)
+          .json({ error: "No tiene permisos para registrar administradores" });
+      } else {
+        res.status(500).json({ error: "Server error while registering user" });
+      }
     }
-}
-
   }
 
   async registerUserWithGoogleController(req: Request, res: Response): Promise<void> {
@@ -63,12 +66,13 @@ class UserController {
       await registerUserWithGoogle(idToken, groupid, role);
       res.status(201).json({ message: "Usuario registrado con éxito usando Google." });
     } catch (error: any) {
+      this.logger.error("Error al registrar usuario con Google:", {err: error});
       if (error.message === "UserAlreadyExistsInThatGroup") {
         res.status(409).json({ error: "The user is already registered in that group." });
       } else if (error.message === "No tiene permisos para registrar administradores") {
         res.status(403).json({ error: "No tiene permisos para registrar administradores" });
-      } else if (error.message === "Token inválido o expirado" || 
-                 error.message === "Token expirado" || 
+      } else if (error.message === "Token inválido o expirado" ||
+                 error.message === "Token expirado" ||
                  error.message === "Token inválido") {
         res.status(401).json({ error: error.message });
       } else if (error.message === "No se pudo obtener email de Firebase") {
@@ -94,6 +98,7 @@ class UserController {
         res.status(404).json({ message: "Usuario no encontrado" });
       else res.status(200).json(userData);
     } catch (error) {
+      this.logger.error("Error al obtener usuario:", {err: error});
       res.status(500).json({ error: "Server error while fetching user" });
     }
   }
@@ -105,7 +110,7 @@ class UserController {
       const email = decoded.email;
       const firebaseData = decoded.firebase as any;
       const providerId = firebaseData?.sign_in_provider;
-      
+
       if (!email) {
         res.status(400).json({ error: "No se pudo obtener email de Firebase" });
         return;
@@ -116,8 +121,8 @@ class UserController {
       if (providerId && providerId !== "github.com") {
         const userResult = await getUserByemail(email);
         if (userResult && !("error" in userResult) && userResult !== null) {
-          res.status(400).json({ 
-            error: "Este usuario está registrado con Google. Por favor, inicia sesión con Google." 
+          res.status(400).json({
+            error: "Este usuario está registrado con Google. Por favor, inicia sesión con Google."
           });
           return;
         }
@@ -134,6 +139,7 @@ class UserController {
       await saveUserCookie(token, res);
       res.status(200).json(user);
     } catch (error: any) {
+      this.logger.error("Error al obtener usuario:", {err: error});
       if (error.message && error.message.includes("Usuario no encontrado")) {
         res.status(404).json({ error: "Usuario no encontrado. Por favor, regístrate primero." });
       } else {
@@ -154,10 +160,10 @@ class UserController {
       await saveUserCookie(jwtToken, res);
       res.status(200).json(user);
     } catch (error: any) {
-      console.error("Error en getUserControllerGoogle:", error);
+      this.logger.error("Error al obtener usuario con Google:", {err: error});
       if (error.message === "DEBE_USAR_GOOGLE") {
-        res.status(400).json({ 
-          error: "Este usuario está registrado con Google. Por favor, inicia sesión con Google." 
+        res.status(400).json({
+          error: "Este usuario está registrado con Google. Por favor, inicia sesión con Google."
         });
       } else if (error.message === "Usuario no encontrado") {
         res.status(404).json({ error: "Usuario no encontrado. Por favor, regístrate primero." });
@@ -199,7 +205,7 @@ class UserController {
       }
       res.status(200).json(userData);
     } catch (error) {
-      console.error("Error en /me:", error);
+      this.logger.error("Error al obtener usuario:", {err: error});
       res.status(401).json({ error: "Token inválido o expirado" });
     }
   }
@@ -230,6 +236,7 @@ class UserController {
         res.status(404).json({ message: "Usuario no encontrado" });
       }
     } catch (error) {
+      this.logger.error("Error al obtener usuario:", {err: error});
       res.status(500).json({ error: "Server error while fetching user" });
     }
   }
@@ -245,6 +252,7 @@ class UserController {
         res.status(401).json({ success: false, message: "Wrong password." });
       }
     } catch (error) {
+      this.logger.error("Error al verificar contraseña:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -261,6 +269,7 @@ class UserController {
       const users = await this.userRepository.getUsersByGroupid(gid)
       res.json(users);
     } catch (error) {
+      this.logger.error("Error al obtener usuarios por groupid:", {err: error});
       res
         .status(404)
         .json({ error: "No se encontraron usuarios con ese grupo" });
@@ -273,6 +282,7 @@ class UserController {
         res.status(404).json({ message: "Usuarios no encontrado" });
       else res.status(200).json(userData);
     } catch (error) {
+      this.logger.error("Error al obtener usuarios:", {err: error});
       res.status(500).json({ error: "Server error while fetching users" });
     }
   }
@@ -293,6 +303,7 @@ class UserController {
         res.status(404).json({ message: "Usuario no encontrado" });
       else res.status(200).json(userData);
     } catch (error) {
+      this.logger.error("Error al obtener usuario por id:", {err: error});
       res.status(500).json({ error: "Server error while fetching user" });
     }
   }
@@ -312,6 +323,7 @@ class UserController {
         res.status(404).json({ message: "Usuario no encontrado" });
       else res.status(200).json(userData);
     } catch (error) {
+      this.logger.error("Error al actualizar usuario:", {err: error});
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -331,7 +343,7 @@ class UserController {
         .status(200)
         .json({ message: "Usuario eliminado del grupo exitosamente." });
     } catch (error:any) {
-      console.error("Error al eliminar usuario del grupo:", error);
+      this.logger.error("Error al eliminar usuario del grupo:", {err: error});
       const msg = typeof error === "string" ? error : error?.message;
       if (msg === "Usuario o grupo no encontrado") {
         res.status(404).json({ error: msg });

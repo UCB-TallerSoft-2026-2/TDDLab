@@ -9,6 +9,7 @@ import { ITimelineEntry } from "../../modules/TDDCycles/Domain/ITimelineCommit";
 import { GetCommitTimeLineUseCase } from "../../modules/TDDCycles/Application/getCommitTimeLineUseCase";
 import { GetCommitHistoryUseCase } from "../../modules/TDDCycles/Application/getCommitHistoryUseCase";
 import { GetCommitCyclesUseCase } from "../../modules/TDDCycles/Application/getCommitCyclesUseCase";
+import { ILogger } from "../../modules/Shared/Domain/Logging/ILogger";
 
 
 
@@ -22,11 +23,13 @@ class TDDCyclesController {
   getCommitExecutions: GetCommitTimeLineUseCase;
   getCommitHistoryUseCase: GetCommitHistoryUseCase;
   getCommitCyclesUseCase: GetCommitCyclesUseCase;
+  logger: ILogger
 
   constructor(
     dbCommitsRepository: IDBCommitsRepository,
     dbJobsRepository: IDBJobsRepository,
-    githubRepository: IGithubRepository
+    githubRepository: IGithubRepository,
+    logger: ILogger,
   ) {
     this.tddCyclesUseCase = new GetTDDCyclesUseCase(
       dbCommitsRepository,
@@ -46,6 +49,7 @@ class TDDCyclesController {
     this.getCommitCyclesUseCase = new GetCommitCyclesUseCase(githubRepository);
     this.dbCommitsRepository = dbCommitsRepository;
     this.dbJobsRepository = dbJobsRepository;
+    this.logger = logger.child("TDDCyclesController");
   }
   //NO SE USA
   async getTDDCycles(req: Request, res: Response) {
@@ -62,6 +66,7 @@ class TDDCyclesController {
       );
       return res.status(200).json(commits);
     } catch (error) {
+      this.logger.error('Error getting TDD cycles:', { error });
       return res.status(500).json({ error: "Server error" });
     }
   }
@@ -80,6 +85,7 @@ class TDDCyclesController {
       );
       return res.status(200).json(testResults);
     } catch (error) {
+      this.logger.error('Error getting test results:', { error });
       return res.status(500).json({ error: "Server error" });
     }
   }
@@ -112,13 +118,13 @@ class TDDCyclesController {
         });
       }
 
-      const owner = ownerRaw; 
+      const owner = ownerRaw;
       const repoName = repoNameRaw;
 
       const commits = await this.getCommitHistoryUseCase.execute(String(owner), String(repoName));
       return res.status(200).json(commits);
     } catch (error) {
-      console.error("Error fetching commit history:", error);
+      this.logger.error('Error fetching commit history:', { error });
       return res.status(500).json({ error: "Server error" });
     }
   }
@@ -140,7 +146,7 @@ class TDDCyclesController {
       const commits = await this.getCommitCyclesUseCase.execute(String(owner), String(repoName));
       return res.status(200).json(commits);
     } catch (error) {
-      console.error("Error fetching commit cycles:", error);
+      this.logger.error('Error fetching commit cycles:', { error });
       return res.status(500).json({ error: "Server error" });
     }
   }
@@ -154,16 +160,16 @@ class TDDCyclesController {
           .status(400)
           .json({ error: "Bad request, missing sha, owner or repoName" });
       }
-  
+
       const jobData = await this.getCommitExecutions.execute(
         String(sha),
         String(owner),
         String(repoName)
       );
-  
+
       return res.status(200).json(jobData);
     } catch (error) {
-      console.error("Error getting commit timeline:", error);
+      this.logger.error('Error getting commit timeline:', { error });
       return res.status(500).json({ error: "Server error" });
     }
   }
@@ -178,7 +184,7 @@ class TDDCyclesController {
     const lastExecution = commitTimelineEntries.at(-1);
     const color = lastExecution?.color;
     const conclusion = color === "green" ? "success" : "failure";
-  
+
     try {
       await this.dbJobsRepository.saveJobFromTDDLog({
         sha: actualCommitSha,
@@ -187,13 +193,10 @@ class TDDCyclesController {
         conclusion,
       });
     } catch (error) {
-      console.error(
-        `Error al insertar el commit ${actualCommitSha} en jobsTable:`,
-        error
-      );
+      this.logger.error(`Error al insertar el commit ${actualCommitSha} en jobsTable:`, { error });
     }
   }
-  
+
   //NO SE USA
   private async handleJobConclusionUpdate(
     actualCommitSha: string,
@@ -206,13 +209,13 @@ class TDDCyclesController {
       repoOwner,
       repoName
     );
-  
+
     if (commitInJobs) {
       if (commitInJobs.conclusion === null) {
         const lastExecution = commitTimelineEntries.at(-1);
         const color = lastExecution?.color;
         const conclusion = color === "green" ? "success" : "failure";
-  
+
         try {
           await this.dbJobsRepository.updateJobConclusion(
             actualCommitSha,
@@ -250,7 +253,7 @@ class TDDCyclesController {
         repoName,
         commitSha
       );
-  
+
       if (commitInCommitsTable) {
         if (commitInCommitsTable.test_count === "") {
           await this.dbCommitsRepository.updateTestCount(
@@ -268,11 +271,11 @@ class TDDCyclesController {
       throw error;
     }
   }
-  
-  
+
+
   //NO SE USA
   async uploadTDDLog(req: Request, res: Response) {
-    
+
     try {
 
       const getColor = (testEntry: any): string => {
@@ -306,7 +309,7 @@ class TDDCyclesController {
             if(testEntry.numPassedTests !== undefined && testEntry.numTotalTests !== undefined && testEntry.timestamp){
               const color = getColor(testEntry);
               const commitTimelineEntry: ITimelineEntry = {
-                execution_id: null, 
+                execution_id: null,
                 commit_sha: actualCommitSha,
                 execution_timestamp: new Date(testEntry.timestamp),
                 number_of_tests: testEntry.numTotalTests,
@@ -316,14 +319,14 @@ class TDDCyclesController {
                 repoOwner
               };
               commitTimelineEntries.push(commitTimelineEntry);
-            } 
+            }
           }
           await this.handleJobConclusionUpdate(
             actualCommitSha,
             repoOwner,
             repoName,
             commitTimelineEntries
-          ); 
+          );
 
           const lastExecutionEntry = commitTimelineEntries[commitTimelineEntries.length - 1];
           if (lastExecutionEntry) {
@@ -334,7 +337,7 @@ class TDDCyclesController {
               lastExecutionEntry.number_of_tests
             );
           }
-       
+
           let tdd_cycle_entry="";
           const hasRed = commitTimelineEntries.some(entry => entry.color === "red");
           const lastIsGreen = commitTimelineEntries.length > 0 && commitTimelineEntries[commitTimelineEntries.length - 1].color === "green";
@@ -351,11 +354,11 @@ class TDDCyclesController {
             tdd_cycle_entry="Verde";
           }
           try{
-            await this.dbCommitsRepository.updateTddCycle(actualCommitSha,tdd_cycle_entry); 
+            await this.dbCommitsRepository.updateTddCycle(actualCommitSha,tdd_cycle_entry);
           } catch (error) {
             console.error(`Error al actualizar el commit ${actualCommitSha}: ${error}`);
           }
-          // despues insertamos en la tabla de commits tabla 
+          // despues insertamos en la tabla de commits tabla
           // Se modificó la tabla en staging
           lastCommitIndex = i + 1;
         }
@@ -369,7 +372,7 @@ class TDDCyclesController {
       return res.status(500).json({ error: "Error al procesar el archivo TDD log" });
     }
   }
-  
+
   // NO SE USA
   async getCommits(req: Request, res: Response) {
     try {

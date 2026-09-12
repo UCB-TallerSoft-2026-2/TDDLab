@@ -12,6 +12,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
     const connection: IDatabaseConnection = await this.connectionFactory.getConnection();
     try {
       const result = await connection.query(query, values);
+      console.log("Resultado de la consulta: ", result.rows);
       return result.rows;
     } finally {
       connection.release();
@@ -48,7 +49,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
       .create(GroupsSchema)
       .select()
       .build();
-
+    console.log("Ejecutando consulta: ", query, params);
     const rows = await this.executeQuery(query, params);
     return rows.map((row) => this.mapRowToGroup(row));
   }
@@ -60,7 +61,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
       .where(new GroupsOptions().byId(id))
       .limit(1)
       .build();
-
+    console.log("Ejecutando consulta: ", query, params);
     const rows = await this.executeQuery(query, params);
     if (rows.length === 1) {
       return this.mapRowToGroup(rows[0]);
@@ -69,7 +70,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
   }
 
   async checkGroupExists(groupid: number): Promise<boolean> {
-    const query = "SELECT EXISTS (SELECT 1 FROM groups WHERE id = $1)";
+    const query = "SELECT EXISTS (SELECT 1 FROM Groups WHERE id = $1)";
     const result = await this.executeQuery(query, [groupid]);
     return result[0].exists;
   }
@@ -80,7 +81,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
       .insert(group)
       .returning()
       .build();
-
+    console.log("Ejecutando consulta: ", query, params);
     const rows = await this.executeQuery(query, params);
     return this.mapRowToGroup(rows[0]);
   }
@@ -88,7 +89,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
   async deleteGroup(id: number): Promise<void> {
     await this.executeTransaction([
       { query: 'DELETE FROM assignments WHERE groupid = $1', values: [id] },
-      { query: 'DELETE FROM groups WHERE id = $1', values: [id] },
+      { query: 'DELETE FROM Groups WHERE id = $1', values: [id] },
     ]);
   }
 
@@ -99,7 +100,7 @@ export class GroupRepositoryBuilder implements IGroupRepository {
       .where(new GroupsOptions().byId(id))
       .returning()
       .build();
-
+    console.log("Ejecutando consulta: ", query, params);
     const rows = await this.executeQuery(query, params);
     if (rows.length === 1) {
       return this.mapRowToGroup(rows[0]);
