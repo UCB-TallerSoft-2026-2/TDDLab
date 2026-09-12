@@ -7,9 +7,9 @@ services:
     env_file:
       - .env.local
     environment:
-      POSTGRES_DB: tddlab_test
-      POSTGRES_USER: tdd_user
-      POSTGRES_PASSWORD: tdd_pass
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5434:5432"
@@ -29,6 +29,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.firebase
+      args:
+        # Pasa las variables a Vite en tiempo de build
+        VITE_USE_FIREBASE_EMULATOR: "true"
+    container_name: tddlab-firebase
     ports:
       - "4000:4000"
       - "5000:5000"
@@ -52,7 +56,9 @@ services:
     env_file:
       - .env.local
     environment:
-      - PGHOST=postgres
+      - PGHOST=${PGHOST}
+      - PGSSLMODE=${PGSSLMODE}
+      - NODE_ENV=development
       - FIREBASE_AUTH_EMULATOR_HOST=firebase:9099
     depends_on:
       postgres:

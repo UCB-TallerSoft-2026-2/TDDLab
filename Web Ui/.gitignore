@@ -182,3 +182,5 @@ bun.lock
 ## output directories
 
 graphify-out/
+
+src/modules/User-Authentication/infrastructure/authLocalFirebase.ts

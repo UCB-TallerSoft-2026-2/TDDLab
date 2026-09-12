@@ -1,8 +1,5 @@
 import { AuthProvider, GithubAuthProvider, GoogleAuthProvider, User, signInWithPopup, signOut } from "firebase/auth";
 import { auth } from "../../../firebaseConfig"
-// if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-//   connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-// }
 
 export enum OAuthProvider {
   Google = "google",

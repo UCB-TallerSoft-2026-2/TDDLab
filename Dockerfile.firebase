@@ -7,12 +7,15 @@ FROM docker.io/oven/bun:1.4.0-alpine AS builder
 
 WORKDIR /build
 
-COPY ["Web Ui/package.json", "./"]
-COPY ["Web Ui/bun.lock", "./"]
+COPY ["Web Ui/package.json", "Web Ui/bun.lock*", "./"]
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile || bun install
 
 COPY ["Web Ui/", "./"]
+
+# Declarar ARG para que Vite lea la variable durante bun run build
+ARG VITE_USE_FIREBASE_EMULATOR=true
+ENV VITE_USE_FIREBASE_EMULATOR=$VITE_USE_FIREBASE_EMULATOR
 
 RUN bun run build
 
@@ -34,11 +37,11 @@ WORKDIR /app
 COPY ["Web Ui/firebase.staging.json", "./firebase.json"]
 COPY ["Web Ui/.firebaserc", "./"]
 
-# ✅ Ruta correcta
 COPY --from=builder /build/dist ./dist
 
 EXPOSE 4000 5000 9099
 
-ENTRYPOINT ["/sbin/tini","--"]
+ENTRYPOINT ["/sbin/tini", "--"]
 
-CMD ["firebase","emulators:start","--only","hosting,auth","--project","staging"]
+# La vinculación a 0.0.0.0 debe estar configurada dentro de firebase.json
+CMD ["firebase", "emulators:start", "--only", "hosting,auth", "--project", "staging"]

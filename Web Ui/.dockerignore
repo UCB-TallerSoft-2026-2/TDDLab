@@ -1,0 +1,26 @@
+# Dependencias y archivos de compilación local
+node_modules
+dist
+coverage
+graphify-out
+
+# Archivos y herramientas de prueba
+test
+cypress.config.ts
+jest.config.ts
+jest.setup.js
+CSSStub.js
+
+# Configuraciones alternativas de Firebase
+
+
+# Control de versiones y documentación
+.git
+.gitignore
+README.md
+
+# Archivos de entorno y logs
+.env*
+!.env.example
+*.log
+.DS_Store

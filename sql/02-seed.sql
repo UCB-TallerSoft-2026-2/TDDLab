@@ -6,7 +6,7 @@
 -- ============================================================
 -- GROUPS (3 grupos)
 -- ============================================================
-INSERT INTO "groups" (groupname, groupdetail, creationdate) VALUES
+INSERT INTO Groups (groupname, groupdetail, creationdate) VALUES
   ('Grupo A', 'Grupo de Desarrollo', '2025-01-15'),
   ('Grupo B', 'Grupo de QA', '2025-02-01'),
   ('Grupo C', 'Grupo de DevOps', '2025-03-10')
@@ -73,7 +73,7 @@ ON CONFLICT DO NOTHING;
 -- ============================================================
 -- TEACHER COMMENTS (4 comentarios)
 -- ============================================================
-INSERT INTO "teachercomments" (submission_id, teacher_id, content, created_at) VALUES
+INSERT INTO TeacherComments (submission_id, teacher_id, content, created_at) VALUES
   (1, 2, 'Buen trabajo en el primer commit', '2025-04-02 10:00:00'),
   (5, 4, 'Excelente cobertura de tests', '2025-04-21 15:30:00'),
   (6, 4, 'Falta documentación', '2025-04-22 09:15:00'),

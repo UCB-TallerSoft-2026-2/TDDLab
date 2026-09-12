@@ -7,7 +7,8 @@ import {
   VITE_FIREBASE_MESSAGING_SENDER_ID,
   VITE_FIREBASE_APP_ID
 } from '../config.ts';
-import { getAuth } from "firebase/auth";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { VITE_USE_FIREBASE_EMULATOR } from "../config";
 
 const firebaseConfig = {
   apiKey: VITE_FIREBASE_API_KEY,
@@ -26,6 +27,9 @@ let auth: any = null;
 if (VITE_FIREBASE_API_KEY) {
   try {
     auth = getAuth(firebase);
+    if (VITE_USE_FIREBASE_EMULATOR) {
+      connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+    }
   } catch (error) {
     if (!isTestEnv) {
       throw error;

@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================================
 -- Dominio: Groups
 -- ============================================================
-CREATE TABLE IF NOT EXISTS groups (
+CREATE TABLE IF NOT EXISTS Groups (
     id SERIAL PRIMARY KEY,
     groupname VARCHAR(255) NOT NULL,
     groupdetail TEXT,
@@ -21,14 +21,7 @@ CREATE TABLE IF NOT EXISTS groups (
 CREATE TABLE IF NOT EXISTS userstable (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    groupid INTEGER REFERENCES "Groups"(id),
-    role VARCHAR(50) NOT NULL DEFAULT 'student'
-);
-
-CREATE TABLE IF NOT EXISTS usersTable (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    groupid INTEGER REFERENCES "Groups"(id),
+    groupid INTEGER REFERENCES Groups(id),
     role VARCHAR(50) NOT NULL DEFAULT 'student'
 );
 
@@ -56,7 +49,7 @@ CREATE TABLE IF NOT EXISTS assignments (
     state VARCHAR(50) NOT NULL DEFAULT 'pending',
     link TEXT,
     comment TEXT,
-    groupid INTEGER NOT NULL REFERENCES "Groups"(id),
+    groupid INTEGER NOT NULL REFERENCES Groups(id),
     practice_id VARCHAR(255)
 );
 
@@ -101,7 +94,7 @@ CREATE TABLE IF NOT EXISTS practicesubmissions (
 -- ============================================================
 -- Dominio: TeacherComments
 -- ============================================================
-CREATE TABLE IF NOT EXISTS teachercomments (
+CREATE TABLE IF NOT EXISTS TeacherComments (
     id SERIAL PRIMARY KEY,
     submission_id INTEGER NOT NULL REFERENCES submissions(id),
     teacher_id INTEGER NOT NULL REFERENCES userstable(id),
@@ -185,7 +178,7 @@ CREATE INDEX IF NOT EXISTS idx_timeline_commit_sha
 -- ============================================================
 -- Datos semilla mínimos para testing
 -- ============================================================
-INSERT INTO "Groups" (groupname, groupdetail, creationdate)
+INSERT INTO Groups (groupname, groupdetail, creationdate)
 VALUES ('Grupo Test', 'Grupo de prueba para testing', NOW())
 ON CONFLICT DO NOTHING;
 
