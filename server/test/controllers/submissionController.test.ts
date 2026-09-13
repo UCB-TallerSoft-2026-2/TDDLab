@@ -3,13 +3,22 @@ import { getSubmissionRepositoryMock } from "../__mocks__/submissions/repository
 import { getSubmissionListMock, SubmissionInProgresDataMock } from "../__mocks__/submissions/dataTypeMocks/submissionData";
 import { createRequest } from "../__mocks__/submissions/requestMock";
 import { createResponse } from "../__mocks__/submissions/responseMock";
+import { ILogger } from "../../src/modules/Shared/Domain/Logging/ILogger";
 
 let controller: SubmissionController;
 const submissionRepositoryMock = getSubmissionRepositoryMock();
+const loggerMock = {
+  child: jest.fn().mockReturnThis(),
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+} as ILogger;
 
 beforeEach(() => {
     controller = new SubmissionController(
         submissionRepositoryMock,
+        loggerMock,
     );
 });
 
@@ -137,17 +146,17 @@ describe("Update Assignment", () => {
       expect(res.json).toHaveBeenCalledWith({ error: "Server error" });
     });
   });
-  
+
 describe("Get Submissions By Assignment Id", () => {
   it("should respond with a status 200 and a list of submissions", async () => {
     const req = createRequest("25");
     const res = createResponse();
     const submissions = getSubmissionListMock();
-    
+
     submissionRepositoryMock.getSubmissionsByAssignmentId.mockResolvedValue(submissions);
-    
+
     await controller.getSubmissionsByAssignmentId(req, res);
-    
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(submissions);
   });
@@ -155,11 +164,11 @@ describe("Get Submissions By Assignment Id", () => {
   it("should respond with a status 500 and error message when fetching submissions fails", async () => {
     const req = createRequest("25");
     const res = createResponse();
-    
+
     submissionRepositoryMock.getSubmissionsByAssignmentId.mockRejectedValue(new Error("Error fetching submissions"));
-    
+
     await controller.getSubmissionsByAssignmentId(req, res);
-    
+
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: "Error getSubmissionsByAssignmentId" });
   });
@@ -167,11 +176,11 @@ describe("Get Submissions By Assignment Id", () => {
   it("should respond with a status 200 and an empty list if no submissions are found", async () => {
     const req = createRequest("25");
     const res = createResponse();
-    
+
     submissionRepositoryMock.getSubmissionsByAssignmentId.mockResolvedValue([]);
-    
+
     await controller.getSubmissionsByAssignmentId(req, res);
-    
+
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith([]);
   });

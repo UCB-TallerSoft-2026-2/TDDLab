@@ -55,7 +55,7 @@ export class UserRepository implements IUserRepository {
     return null;
   }
   async obtainUser(id: number): Promise<User | null> {
-    const query = "SELECT id, email, groupid, role FROM usersTable WHERE id = $1";
+    const query = "SELECT id, email, groupid, role FROM userstable WHERE id = $1";
     const values = [id];
     const rows = await this.executeQuery(query, values);
     if (rows.length === 1) {

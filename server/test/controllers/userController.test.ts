@@ -7,6 +7,7 @@ import { getUserToken } from "../../src/modules/Users/Application/getUserToken";
 import { saveUserCookie } from "../../src/modules/Users/Application/saveUserCookie";
 import { decodeUserTokenFromCookie } from "../../src/modules/Users/Application/decodeUserTokenFromCookie";
 import { getUser } from "../../src/modules/Users/Application/getUser";
+import { ILogger } from "../../src/modules/Shared/Domain/Logging/ILogger";
 
 // Crear un mock de UserRepository
 jest.mock("../../src/modules/Users/Repositories/UserRepository");
@@ -33,10 +34,17 @@ jest.mock("../../src/modules/Users/Application/saveUserCookie", () => ({
 describe("UserController", () => {
   let controller: UserController;
   let userRepositoryMock: UserRepository;
-
+  let loggerMock: ILogger;
   beforeEach(() => {
     userRepositoryMock = new UserRepository() as jest.Mocked<UserRepository>;
-    controller = new UserController(userRepositoryMock);
+    loggerMock = {
+      child: jest.fn().mockReturnThis(),
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    } as ILogger;
+    controller = new UserController(userRepositoryMock, loggerMock);
   });
 
   describe("removeUserFromGroup", () => {
@@ -96,7 +104,7 @@ describe("UserController", () => {
       };
       jest.clearAllMocks();
       userRepositoryMock = new UserRepository() as jest.Mocked<UserRepository>;
-      controller = new UserController(userRepositoryMock);
+      controller = new UserController(userRepositoryMock, loggerMock);
     });
 
     it("Verificar el token con firebase", async () => {

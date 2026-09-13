@@ -6,12 +6,19 @@ import {
 } from "../__mocks__/assignments/dataTypeMocks/assignmentData";
 import { createRequest } from "../__mocks__/assignments/requestMocks";
 import { createResponse } from "../__mocks__/assignments/responseMoks";
+import { ILogger } from "../../src/modules/Shared/Domain/Logging/ILogger";
 
 let controller: AssignmentController;
 const assignmentRepositoryMock = getAssignmentRepositoryMock();
-
+const loggerMock = {
+  child: jest.fn().mockReturnThis(),
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+} as ILogger;
 beforeEach(() => {
-  controller = new AssignmentController(assignmentRepositoryMock);
+  controller = new AssignmentController(assignmentRepositoryMock, loggerMock);
 });
 
 describe("Get assignments by group ID", () => {
@@ -168,7 +175,7 @@ describe("Delete Assignment", () => {
 
 describe("Deliver Assignment", () => {
   const assignmentRepositoryMock = getAssignmentRepositoryMock();
-  const controller = new AssignmentController(assignmentRepositoryMock);
+  const controller = new AssignmentController(assignmentRepositoryMock,loggerMock);
   it("should respond with a status 200 and delivered assignment when delivery is successful", async () => {
     const req = createRequest(
       "id_assignment_pending",

@@ -1,13 +1,21 @@
 import UserController from "../../../../src/controllers/users/userController";
+import { ILogger } from "../../../../src/modules/Shared/Domain/Logging/ILogger";
 import * as getUserByEmailModule from "../../../../src/modules/Users/Application/getUserByemailUseCase";
 import { UserRepository } from "../../../../src/modules/Users/Repositories/UserRepository";
 
 describe("UserController - getUserController", () => {
   let userController: UserController;
   let mockRes: any;
+  const loggerMock = {
+    child: jest.fn().mockReturnThis(),
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+  } as ILogger;
 
   beforeEach(() => {
-    userController = new UserController(new UserRepository());
+    userController = new UserController(new UserRepository(), loggerMock);
     mockRes = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
@@ -39,11 +47,11 @@ describe("UserController - getUserController", () => {
 
  it("Debe devolver 200 si el usuario existe", async () => {
   const mockReq = { body: { email: "si@existe.com" } };
-  const fakeUser = { 
-    id: 1, 
-    email: "si@existe.com", 
-    groupid: [1], 
-    role: "admin" 
+  const fakeUser = {
+    id: 1,
+    email: "si@existe.com",
+    groupid: [1],
+    role: "admin"
   };
 
   jest.spyOn(getUserByEmailModule, "getUserByemail").mockResolvedValue(fakeUser);

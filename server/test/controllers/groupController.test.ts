@@ -7,13 +7,20 @@ import {
 import GroupsController from "../../src/controllers/Groups/groupController";
 import { createRequest } from "../__mocks__/assignments/requestMocks";
 import { createResponse } from "../__mocks__/assignments/responseMoks";
+import { ILogger } from "../../src/modules/Shared/Domain/Logging/ILogger";
 
 
 let controller: GroupsController;
 const groupsRepositoryMock = getGroupsRepositoryMock();
-
+const loggerMock = {
+  child: jest.fn().mockReturnThis(),
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+} as ILogger;
 beforeEach(() => {
-  controller = new GroupsController(groupsRepositoryMock);
+  controller = new GroupsController(groupsRepositoryMock, loggerMock);
 });
 
 describe("Get groups", () => {
@@ -118,7 +125,7 @@ describe("Delete Group", () => {
         expect(res.status).toHaveBeenCalledWith(204);
         expect(res.send).toHaveBeenCalled();
       });
-  
+
     it("should respond with a status 500 and error message when group deletion fails", async () => {
       const req = createRequest("non_existing_id");
       const res = createResponse();

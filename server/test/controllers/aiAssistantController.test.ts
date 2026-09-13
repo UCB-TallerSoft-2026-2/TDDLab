@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { AIAssistantRepository } from '../../src/modules/AIAssistant/repository/AIAssistantRepositoy';
 import { AIAssistantDataBaseRepository } from '../../src/modules/AIAssistant/repository/AiAssistantDataBaseRepository';
 import { ChatbotAssistantRepository } from '../../src/modules/AIAssistant/repository/ChatbotAssistantRepository';
+import { ILogger } from '../../src/modules/Shared/Domain/Logging/ILogger';
 
 describe('AIAssitantController', () => {
   let controller: AIAssistantController;
@@ -11,7 +12,7 @@ describe('AIAssitantController', () => {
   let mockAiAssistantRepository: AIAssistantRepository;
   let mockAiAssistantDBRepository: AIAssistantDataBaseRepository;
   let mockChatbotAssistantRepository: ChatbotAssistantRepository;
-
+  let loggerMock: ILogger;
   beforeEach(() => {
     mockAiAssistantRepository = {
       sendPrompt: jest.fn().mockResolvedValue({ result: 'Respuesta del Asistente' }),
@@ -25,7 +26,14 @@ describe('AIAssitantController', () => {
       sendPrompt: jest.fn().mockResolvedValue({ result: 'Respuesta del Asistente' }),
     } as unknown as ChatbotAssistantRepository;
 
-    controller = new AIAssistantController(mockAiAssistantRepository, mockAiAssistantDBRepository, mockChatbotAssistantRepository);
+    loggerMock = {
+      child: jest.fn().mockReturnThis(),
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    } as ILogger;
+    controller = new AIAssistantController(mockAiAssistantRepository, mockAiAssistantDBRepository, mockChatbotAssistantRepository, loggerMock);
 
     req = {
       body: {

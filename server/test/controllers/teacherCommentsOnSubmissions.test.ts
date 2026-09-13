@@ -1,12 +1,20 @@
 import { TeacherCommentController } from "../../src/controllers/teacherCommentsOnSubmissions/teacherCommentsOnSubmissionsController";
+import { ILogger } from "../../src/modules/Shared/Domain/Logging/ILogger";
 import { getTeacherCommentRepositoryMock } from "../__mocks__/teacherCommentsOnSubmissions/repositoryMock";
 import { Request, Response } from "express";
 
 let controller: TeacherCommentController;
 const teacherCommentRepositoryMock = getTeacherCommentRepositoryMock();
+const loggerMock = {
+  child: jest.fn().mockReturnThis(),
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+} as ILogger;
 
 beforeEach(() => {
-  controller = new TeacherCommentController(teacherCommentRepositoryMock);
+  controller = new TeacherCommentController(teacherCommentRepositoryMock, loggerMock);
 });
 
 describe("TeacherCommentController", () => {
@@ -63,7 +71,7 @@ describe("TeacherCommentController", () => {
 
     it("debería devolver 500 en caso de un error interno", async () => {
       teacherCommentRepositoryMock.isTeacher.mockRejectedValue(new Error("Database error"));
-      
+
       const req = {
         body: { submission_id: 1, teacher_id: 2, content: "Test comment" },
       } as Request;
