@@ -93,7 +93,7 @@ function App() {
     hydrate();
   }, [hydrate]);
 
-  if (!isHydrated && !isPublicLandingPath && !isRootPath) {
+  if (!isHydrated && !isPublicLandingPath) {
     return (
       <div
         style={{

@@ -2,16 +2,16 @@ import express from "express";
 import { PostgresConnectionFactory } from "../modules/Shared/Infrastructure/PostgresConnectionFactory";
 import { AssignmentRepositoryBuilder } from "../modules/Assignments/infrastructure/AssignmentRepositoryBuilder";
 import AssignmentController from "../controllers/assignments/assignmentController"; // Import your controller class
-
-const connectionFactory = PostgresConnectionFactory.getInstance();
-const repository = new AssignmentRepositoryBuilder(connectionFactory);
-const assignmentController = new AssignmentController(repository, new PinoLogger()); // Pass the repository instance to the controller
 import {
   authenticateJWT,
   authorizeRoles,
 } from "../../src/middleware/authMiddleware";
 import { PinoLogger } from "../modules/Shared/Infrastructure/Logging/PinoLogger";
 
+
+const connectionFactory = PostgresConnectionFactory.getInstance();
+const repository = new AssignmentRepositoryBuilder(connectionFactory);
+const assignmentController = new AssignmentController(repository, new PinoLogger()); // Pass the repository instance to the controller
 const assignmentsRouter = express.Router();
 
 // Create a new assignment
