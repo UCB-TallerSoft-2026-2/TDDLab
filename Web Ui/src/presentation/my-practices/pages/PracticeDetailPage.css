@@ -47,6 +47,33 @@
   color: #000000;
 }
 
+.practice-status-chip {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.practice-status-chip.is-progress {
+  color: #c07c00;
+  background: #fff8e1;
+  border: 1px solid #f0c040;
+}
+
+.practice-status-chip.is-sent {
+  color: #257800;
+  background: #e8f5e9;
+  border: 1px solid #66bb6a;
+}
+
+.practice-status-chip.is-pending {
+  color: #e00000;
+  background: #ffebee;
+  border: 1px solid #ef5350;
+}
+
 .practice-student-actions {
   display: flex;
   align-items: center;

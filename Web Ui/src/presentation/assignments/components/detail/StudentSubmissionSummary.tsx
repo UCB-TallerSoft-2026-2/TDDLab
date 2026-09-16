@@ -28,7 +28,18 @@ export function StudentSubmissionSummary({
       </p>
 
       <p className="assignment-student-row">
-        <strong>Estado:</strong> {status}
+        <strong>Estado:</strong>{" "}
+        <span
+          className={`assignment-status-chip ${
+            status === "Enviado"
+              ? "is-sent"
+              : status === "En progreso"
+                ? "is-progress"
+                : "is-pending"
+          }`}
+        >
+          {status}
+        </span>
       </p>
 
       {comment && (

@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { GitLinkDialog } from "../../../shared/components/GitHubLinkDialog";
 import { CommentDialog } from "../../../shared/components/CommentDialog";
@@ -10,6 +10,30 @@ import FeedbackSnackbar from "../../../shared/components/FeedbackSnackbar";
 import { PracticeOverviewCard } from "../components/PracticeOverviewCard";
 import { usePracticeDetail } from "../hooks/usePracticeDetail";
 import "./PracticeDetailPage.css";
+
+function GuardedActionButton({
+  enabled,
+  onClick,
+  children,
+  loading,
+}: {
+  enabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  loading?: boolean;
+}) {
+  return (
+    <StatefulButton
+      variantStyle={enabled ? "primary" : "secondary"}
+      disabled={!enabled || !!loading}
+      onClick={() => {
+        if (enabled) onClick();
+      }}
+    >
+      {loading ? "Cargando..." : children}
+    </StatefulButton>
+  );
+}
 
 interface PracticeDetailPageProps {
   userid: number;
@@ -38,6 +62,8 @@ const PracticeDetailPage: React.FC<PracticeDetailPageProps> = ({ userid }) => {
     redirectToGraph,
     uiMessage,
     closeUiMessage,
+    isStartLoading,
+    isFinishLoading,
   } = usePracticeDetail({ userid, practiceid, navigate });
 
   const title = `Detalle de practica ${practice?.title}`;
@@ -46,8 +72,8 @@ const PracticeDetailPage: React.FC<PracticeDetailPageProps> = ({ userid }) => {
   const hasSubmission = Boolean(submission);
   const hasRepo = Boolean(submission?.repository_link);
   const canStart = !hasSubmission;
-  const canFinish = !isTaskInProgress && hasRepo;
   const canView = hasRepo;
+  const isInProgress = hasSubmission && !isTaskInProgress;
 
   return (
     <>
@@ -104,30 +130,49 @@ const PracticeDetailPage: React.FC<PracticeDetailPageProps> = ({ userid }) => {
                 </div>
                 <div className="practice-student-row practice-estado-row">
                   <strong>Estado:</strong>{" "}
-                  <span style={{ marginLeft: "8px" }}>{statusLabel || "Sin estado"}</span>
+                  <span
+                    className={`practice-status-chip ${
+                      statusLabel === "En progreso"
+                        ? "is-progress"
+                        : statusLabel === "Enviado"
+                          ? "is-sent"
+                          : "is-pending"
+                    }`}
+                    style={{ marginLeft: "8px" }}
+                  >
+                    {statusLabel || "Sin estado"}
+                  </span>
                 </div>
               </>
             }
             actions={
               <>
-                <StatefulButton
-                  variantStyle={canStart ? "primary" : "secondary"}
-                  onClick={() => canStart && openLinkDialog()}
-                >
-                  Iniciar práctica
-                </StatefulButton>
-                <StatefulButton
-                  variantStyle={canFinish ? "primary" : "secondary"}
-                  onClick={() => canFinish && openCommentDialog()}
-                >
-                  Finalizar práctica
-                </StatefulButton>
-                <StatefulButton
-                  variantStyle={canView ? "primary" : "secondary"}
-                  onClick={() => canView && redirectToGraph()}
-                >
-                  Ver gráfica
-                </StatefulButton>
+                {canStart && (
+                  <GuardedActionButton
+                    enabled={true}
+                    onClick={openLinkDialog}
+                    loading={isStartLoading}
+                  >
+                    Iniciar práctica
+                  </GuardedActionButton>
+                )}
+                {isInProgress && (
+                  <GuardedActionButton
+                    enabled={true}
+                    onClick={openCommentDialog}
+                    loading={isFinishLoading}
+                  >
+                    Finalizar práctica
+                  </GuardedActionButton>
+                )}
+                {canView && (
+                  <GuardedActionButton
+                    enabled={true}
+                    onClick={redirectToGraph}
+                  >
+                    Ver gráfica
+                  </GuardedActionButton>
+                )}
               </>
             }
           />

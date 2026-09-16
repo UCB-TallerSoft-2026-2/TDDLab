@@ -1,8 +1,18 @@
 import { fireEvent, render, waitFor, screen } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, MemoryRouter, Routes, Route } from "react-router-dom";
 import "@testing-library/jest-dom";
 import AssignmentDetail from "../../../src/presentation/assignments/pages/AssignmentDetail";
 import { GitLinkDialog } from "../../../src/shared/components/GitHubLinkDialog";
+
+function renderWithRoute(component: React.ReactElement, route = "/assignment/1") {
+  return render(
+    <MemoryRouter initialEntries={[route]}>
+      <Routes>
+        <Route path="/assignment/:id" element={component} />
+      </Routes>
+    </MemoryRouter>
+  );
+}
 
 jest.setTimeout(10000);
 
@@ -74,6 +84,17 @@ jest.mock(
   })
 );
 
+const submissionMethodMock = jest.fn().mockResolvedValue(null);
+
+jest.mock(
+  "../../../src/modules/Submissions/Aplication/getSubmissionByUseridandSubmissionid",
+  () => ({
+    GetSubmissionByUserandAssignmentId: jest.fn(() => ({
+      getSubmisssionByUserandSubmissionId: submissionMethodMock,
+    })),
+  })
+);
+
 function mockStudentSubmission(
   submission: {
     id: number;
@@ -86,16 +107,7 @@ function mockStudentSubmission(
     comment: string | null;
   } | null
 ) {
-  jest.doMock(
-    "../../../src/modules/Submissions/Aplication/getSubmissionByUseridandSubmissionid",
-    () => ({
-      GetSubmissionByUserandAssignmentId: jest.fn().mockImplementation(() => ({
-        getSubmisssionByUserandSubmissionId: jest.fn().mockResolvedValue(
-          submission
-        ),
-      })),
-    })
-  );
+  submissionMethodMock.mockResolvedValue(submission);
 }
 
 describe("AssignmentDetail Component", () => {
@@ -178,10 +190,8 @@ describe("AssignmentDetail Component", () => {
       end_date: null,
       comment: null,
     });
-    const { queryByText, getByText } = render(
-      <BrowserRouter>
-        <AssignmentDetail role="student" userid={123} />
-      </BrowserRouter>
+    const { queryByText, getByText } = renderWithRoute(
+      <AssignmentDetail role="student" userid={123} />
     );
 
     await waitFor(() => {
@@ -202,10 +212,8 @@ describe("AssignmentDetail Component", () => {
       end_date: new Date(),
       comment: "Good job",
     });
-    const { queryByText } = render(
-      <BrowserRouter>
-        <AssignmentDetail role="student" userid={123} />
-      </BrowserRouter>
+    const { queryByText } = renderWithRoute(
+      <AssignmentDetail role="student" userid={123} />
     );
 
     await waitFor(() => {
@@ -227,10 +235,8 @@ describe("AssignmentDetail Component", () => {
       end_date: null,
       comment: null,
     });
-    const { getByText } = render(
-      <BrowserRouter>
-        <AssignmentDetail role="student" userid={123} />
-      </BrowserRouter>
+    const { getByText } = renderWithRoute(
+      <AssignmentDetail role="student" userid={123} />
     );
 
     await waitFor(() => {

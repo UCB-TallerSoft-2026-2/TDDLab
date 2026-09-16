@@ -85,6 +85,11 @@ export function useAssignmentDetailData({
   const [showIAButton, setShowIAButton] = useState(false);
   const [disableAdditionalGraphs, setDisableAdditionalGraphs] = useState(true);
 
+  const [isStartLoading, setIsStartLoading] = useState(false);
+  const [isFinishLoading, setIsFinishLoading] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [finishError, setFinishError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchAssignment = async () => {
       const assignmentsRepository = new AssignmentsRepository();
@@ -281,56 +286,80 @@ export function useAssignmentDetailData({
   };
 
   const sendGithubLink = async (repositoryLink: string) => {
-    if (!assignmentid) {
+    if (!assignmentid || isStartLoading) {
       return;
     }
 
-    const submissionsRepository = new SubmissionRepository();
-    const createSubmission = new CreateSubmission(submissionsRepository);
-    const startDate = new Date();
-    const start_date = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate()
-    );
+    setIsStartLoading(true);
+    setStartError(null);
 
-    const submissionData: SubmissionCreationObject = {
-      assignmentid,
-      userid,
-      status: "in progress",
-      repository_link: repositoryLink,
-      start_date,
-    };
+    try {
+      const submissionsRepository = new SubmissionRepository();
+      const createSubmission = new CreateSubmission(submissionsRepository);
+      const startDate = new Date();
+      const start_date = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate()
+      );
 
-    await createSubmission.createSubmission(submissionData);
-    closeLinkDialog();
-    refreshDetailData();
+      const submissionData: SubmissionCreationObject = {
+        assignmentid,
+        userid,
+        status: "in progress",
+        repository_link: repositoryLink,
+        start_date,
+      };
+
+      await createSubmission.createSubmission(submissionData);
+      closeLinkDialog();
+      refreshDetailData();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error al iniciar la tarea";
+      setStartError(message);
+      setUiMessage(message);
+    } finally {
+      setIsStartLoading(false);
+    }
   };
 
   const sendComment = async (comment: string) => {
-    if (!submission) {
+    if (!submission || isFinishLoading) {
       return;
     }
 
-    const submissionRepository = new SubmissionRepository();
-    const finishSubmission = new FinishSubmission(submissionRepository);
-    const endDate = new Date();
-    const end_date = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate()
-    );
+    setIsFinishLoading(true);
+    setFinishError(null);
 
-    const submissionData: SubmissionUpdateObject = {
-      id: submission.id,
-      status: "delivered",
-      end_date,
-      comment,
-    };
+    try {
+      const submissionRepository = new SubmissionRepository();
+      const finishSubmission = new FinishSubmission(submissionRepository);
+      const endDate = new Date();
+      const end_date = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate()
+      );
 
-    await finishSubmission.finishSubmission(submission.id, submissionData);
-    closeCommentDialog();
-    refreshDetailData();
+      const submissionData: SubmissionUpdateObject = {
+        id: submission.id,
+        status: "delivered",
+        end_date,
+        comment,
+      };
+
+      await finishSubmission.finishSubmission(submission.id, submissionData);
+      closeCommentDialog();
+      refreshDetailData();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Error al finalizar la tarea";
+      setFinishError(message);
+      setUiMessage(message);
+    } finally {
+      setIsFinishLoading(false);
+    }
   };
 
   const redirectStudentToGraph = () => {
@@ -434,5 +463,9 @@ export function useAssignmentDetailData({
     submissionRepositoryLink: submission?.repository_link,
     uiMessage,
     closeUiMessage: () => setUiMessage(null),
+    isStartLoading,
+    isFinishLoading,
+    startError,
+    finishError,
   };
 }

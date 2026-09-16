@@ -51,19 +51,22 @@ function GuardedActionButton({
   enabled,
   onClick,
   children,
-}: Readonly<{
+  loading,
+}: {
   enabled: boolean;
   onClick: () => void;
   children: ReactNode;
-}>) {
+  loading?: boolean;
+}) {
   return (
     <StatefulButton
       variantStyle={enabled ? "primary" : "secondary"}
+      disabled={!enabled || !!loading}
       onClick={() => {
         if (enabled) onClick();
       }}
     >
-      {children}
+      {loading ? "Cargando..." : children}
     </StatefulButton>
   );
 }
@@ -73,11 +76,15 @@ function StudentAssignmentSection({
   hasStudentSubmission,
   hasStudentRepository,
   canFinishTask,
+  isStartLoading,
+  isFinishLoading,
 }: Readonly<{
   detailData: AssignmentDetailData;
   hasStudentSubmission: boolean;
   hasStudentRepository: boolean;
   canFinishTask: boolean;
+  isStartLoading: boolean;
+  isFinishLoading: boolean;
 }>) {
   const {
     studentStatusLabel,
@@ -91,7 +98,7 @@ function StudentAssignmentSection({
   } = detailData;
   const canUseAssistant = Boolean(studentSubmission?.repository_link);
 
-  const isInProgress = !canFinishTask && hasStudentSubmission;
+  const isInProgress = canFinishTask && hasStudentSubmission;
 
   return (
     <StudentDetailCard
@@ -114,6 +121,7 @@ function StudentAssignmentSection({
             <GuardedActionButton
               enabled={true}
               onClick={openLinkDialog}
+              loading={isStartLoading}
             >
               Iniciar tarea
             </GuardedActionButton>
@@ -122,6 +130,7 @@ function StudentAssignmentSection({
             <GuardedActionButton
               enabled={true}
               onClick={openCommentDialog}
+              loading={isFinishLoading}
             >
               Finalizar tarea
             </GuardedActionButton>
@@ -232,6 +241,8 @@ function LoadedAssignmentContent({
           hasStudentSubmission={hasStudentSubmission}
           hasStudentRepository={hasStudentRepository}
           canFinishTask={canFinishTask}
+          isStartLoading={detailData.isStartLoading}
+          isFinishLoading={detailData.isFinishLoading}
         />
       ) : (
         <TeacherAssignmentSection detailData={detailData} />
