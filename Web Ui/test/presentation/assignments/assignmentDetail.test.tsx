@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 import AssignmentDetail from "../../../src/presentation/assignments/pages/AssignmentDetail";
 import { GitLinkDialog } from "../../../src/shared/components/GitHubLinkDialog";
+import { GetSubmissionsByAssignmentId } from "../../../src/modules/Submissions/Aplication/getSubmissionsByAssignmentId";
 
 jest.setTimeout(10000);
 
@@ -46,6 +47,22 @@ jest.mock("../../../src/modules/Users/repository/UsersRepository", () => ({
   })),
 }));
 
+function mockSubmissionsForStudent(
+  submissions: Array<{
+    assignmentid: number;
+    userid: number;
+    status: string;
+    repository_link: string;
+    start_date: Date;
+    end_date: Date;
+    comment: string;
+  }>
+) {
+  jest.mocked(GetSubmissionsByAssignmentId).mockImplementation(() => ({
+    getSubmissionsByAssignmentId: jest.fn().mockResolvedValue(submissions),
+  }));
+}
+
 jest.mock(
   "../../../src/modules/Submissions/Aplication/getSubmissionsByAssignmentId",
   () => ({
@@ -75,6 +92,20 @@ jest.mock(
 );
 
 describe("AssignmentDetail Component", () => {
+  beforeEach(() => {
+    mockSubmissionsForStudent([
+      {
+        assignmentid: 1,
+        userid: 123,
+        status: "delivered",
+        repository_link: "https://github.com/student/repo1",
+        start_date: new Date(),
+        end_date: new Date(),
+        comment: "Good job",
+      },
+    ]);
+  });
+
   it("displays the group name", async () => {
     const { getByText } = render(
       <BrowserRouter>
@@ -124,8 +155,20 @@ describe("AssignmentDetail Component", () => {
     });
   });
 
-  it("displays 'Iniciar tarea', 'Ver gráfica', and 'Finalizar tarea' buttons for student role when task is pending", async () => {
-    const { getByText } = render(
+  it("shows only 'Iniciar tarea' (not 'Finalizar tarea') for student role when task is pending", async () => {
+    mockSubmissionsForStudent([
+      {
+        assignmentid: 1,
+        userid: 123,
+        status: "pending",
+        repository_link: "",
+        start_date: new Date(),
+        end_date: null,
+        comment: null,
+      },
+    ]);
+
+    const { queryByText, getByText } = render(
       <BrowserRouter>
         <AssignmentDetail role="student" userid={123} />
       </BrowserRouter>
@@ -133,8 +176,73 @@ describe("AssignmentDetail Component", () => {
 
     await waitFor(() => {
       expect(getByText("Iniciar tarea")).toBeInTheDocument();
-      expect(getByText("Ver gráfica")).toBeInTheDocument();
+    });
+
+    expect(queryByText("Finalizar tarea")).not.toBeInTheDocument();
+  });
+
+  it("shows only 'Finalizar tarea' (not 'Iniciar tarea') for student role when task is in progress", async () => {
+    mockSubmissionsForStudent([
+      {
+        assignmentid: 1,
+        userid: 123,
+        status: "in progress",
+        repository_link: "https://github.com/student/repo",
+        start_date: new Date(),
+        end_date: null,
+        comment: null,
+      },
+    ]);
+
+    const { queryByText, getByText } = render(
+      <BrowserRouter>
+        <AssignmentDetail role="student" userid={123} />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
       expect(getByText("Finalizar tarea")).toBeInTheDocument();
+    });
+
+    expect(queryByText("Iniciar tarea")).not.toBeInTheDocument();
+  });
+
+  it("shows neither 'Iniciar tarea' nor 'Finalizar tarea' for student role when task is delivered", async () => {
+    const { queryByText } = render(
+      <BrowserRouter>
+        <AssignmentDetail role="student" userid={123} />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(queryByText("Estado:")).toBeInTheDocument();
+    });
+
+    expect(queryByText("Iniciar tarea")).not.toBeInTheDocument();
+    expect(queryByText("Finalizar tarea")).not.toBeInTheDocument();
+  });
+
+  it("shows 'Ver gráfica' button when repository link exists regardless of state", async () => {
+    mockSubmissionsForStudent([
+      {
+        assignmentid: 1,
+        userid: 123,
+        status: "in progress",
+        repository_link: "https://github.com/student/repo",
+        start_date: new Date(),
+        end_date: null,
+        comment: null,
+      },
+    ]);
+
+    const { getByText } = render(
+      <BrowserRouter>
+        <AssignmentDetail role="student" userid={123} />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(getByText("Ver gráfica")).toBeInTheDocument();
     });
   });
 
@@ -157,6 +265,27 @@ describe("AssignmentDetail Component", () => {
   });
 
   it("displays the list of submissions for teacher role", async () => {
+    mockSubmissionsForStudent([
+      {
+        assignmentid: 1,
+        userid: 123,
+        status: "delivered",
+        repository_link: "https://github.com/student/repo1",
+        start_date: new Date(),
+        end_date: new Date(),
+        comment: "Good job",
+      },
+      {
+        assignmentid: 1,
+        userid: 124,
+        status: "in progress",
+        repository_link: "https://github.com/student/repo2",
+        start_date: new Date(),
+        end_date: null,
+        comment: null,
+      },
+    ]);
+
     jest.mock('react-router-dom', () => ({
       ...jest.requireActual('react-router-dom'),
       useSearchParams: () => [
