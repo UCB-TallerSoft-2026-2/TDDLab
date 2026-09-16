@@ -91,6 +91,8 @@ function StudentAssignmentSection({
   } = detailData;
   const canUseAssistant = Boolean(studentSubmission?.repository_link);
 
+  const isInProgress = !canFinishTask && hasStudentSubmission;
+
   return (
     <StudentDetailCard
       title="Mi entrega"
@@ -108,27 +110,33 @@ function StudentAssignmentSection({
       }
       actions={
         <>
-          <GuardedActionButton
-            enabled={hasStudentSubmission === false}
-            onClick={openLinkDialog}
-          >
-            Iniciar tarea
-          </GuardedActionButton>
-
-          <GuardedActionButton
-            enabled={hasStudentRepository}
-            onClick={redirectStudentToGraph}
-          >
-            Ver gráfica
-          </GuardedActionButton>
-
-          <GuardedActionButton enabled={canFinishTask} onClick={openCommentDialog}>
-            Finalizar tarea
-          </GuardedActionButton>
-
-          {showIAButton && (
+          {!hasStudentSubmission && (
             <GuardedActionButton
-              enabled={canUseAssistant}
+              enabled={true}
+              onClick={openLinkDialog}
+            >
+              Iniciar tarea
+            </GuardedActionButton>
+          )}
+          {isInProgress && (
+            <GuardedActionButton
+              enabled={true}
+              onClick={openCommentDialog}
+            >
+              Finalizar tarea
+            </GuardedActionButton>
+          )}
+          {hasStudentRepository && (
+            <GuardedActionButton
+              enabled={true}
+              onClick={redirectStudentToGraph}
+            >
+              Ver gráfica
+            </GuardedActionButton>
+          )}
+          {showIAButton && canUseAssistant && (
+            <GuardedActionButton
+              enabled={true}
               onClick={redirectStudentToAssistant}
             >
               Asistente IA
