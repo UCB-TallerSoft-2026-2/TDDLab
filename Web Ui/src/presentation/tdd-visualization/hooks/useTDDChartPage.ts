@@ -20,17 +20,12 @@ function isStudent(role: string) {
   return role === "student";
 }
 
-function getDefaultMetric(graphs: string) {
-  return graphs === "graph" ? "Dashboard" : "Complejidad";
-}
-
 function getRepoQuery(submission: Submission) {
   const [, , , repoOwner, repoName] = submission.repository_link.split("/");
   return `repoOwner=${repoOwner}&repoName=${repoName}&submissionId=${submission.id}`;
 }
 
 export function useTDDChartPage({
-  graphs,
   port,
   role,
   teacher_id,
@@ -63,8 +58,6 @@ export function useTDDChartPage({
   const [tddLogsInfo, setTDDLogsInfo] = useState<TDDLogEntry[] | null>(null);
   const [commitsTddCycles, setCommitsTddCycles] = useState<CommitCycle[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const defaultMetric = getDefaultMetric(graphs);
 
   const loadComments = async () => {
     try {
@@ -123,7 +116,7 @@ export function useTDDChartPage({
     if (currentIndex > 0) {
       const previousIndex = currentIndex - 1;
       const previousSubmission = fetchedSubmissions[previousIndex];
-      localStorage.setItem("selectedMetric", defaultMetric);
+      localStorage.setItem("selectedMetric", "Dashboard");
       navigate(
         `?${getRepoQuery(previousSubmission)}&fetchedSubmissions=${encodeURIComponent(JSON.stringify(fetchedSubmissions))}`,
       );
@@ -135,7 +128,7 @@ export function useTDDChartPage({
     if (currentIndex < fetchedSubmissions.length - 1) {
       const nextIndex = currentIndex + 1;
       const nextSubmission = fetchedSubmissions[nextIndex];
-      localStorage.setItem("selectedMetric", defaultMetric);
+      localStorage.setItem("selectedMetric", "Dashboard");
       navigate(
         `?${getRepoQuery(nextSubmission)}&fetchedSubmissions=${encodeURIComponent(JSON.stringify(fetchedSubmissions))}`,
       );
