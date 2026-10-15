@@ -29,12 +29,12 @@ jest.mock("react-router-dom", () => ({
 }));
 
 describe("TDDChartPage", () => {
-	test.each([["admin"], ["student"]])(
-		"renders loading spinner when loading is true for role %s",
-		async (role) => {
-			const { getByTestId } = render(
-				<TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294} graphs="graph" />
-			);
+  test.each([["admin"], ["student"]])(
+    "renders loading spinner when loading is true for role %s",
+    async (role) => {
+      const { getByTestId } = render(
+        <TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294}/>
+      );
 
 			await waitFor(() => {
 				const loadingSpinner = getByTestId("loading-spinner");
@@ -43,12 +43,12 @@ describe("TDDChartPage", () => {
 		}
 	);
 
-	test.each([["admin"], ["student"]])(
-		"displays an error message when no data is available for role %s",
-		async (role) => {
-			const { getByTestId } = render(
-				<TDDChartPage port={new MockGithubAPIEmpty()} role={role} teacher_id={294} graphs="graph" />
-			);
+  test.each([["admin"], ["student"]])(
+    "displays an error message when no data is available for role %s",
+    async (role) => {
+      const { getByTestId } = render(
+        <TDDChartPage port={new MockGithubAPIEmpty()} role={role} teacher_id={294}/>
+      );
 
 			await waitFor(() => {
 				const error = getByTestId("errorMessage");
@@ -57,12 +57,12 @@ describe("TDDChartPage", () => {
 		}
 	);
 
-	test.each([["admin"], ["student"]])(
-		"displays the repository name for role %s",
-		async (role) => {
-			const { getByTestId } = render(
-				<TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294} graphs="graph" />
-			);
+  test.each([["admin"], ["student"]])(
+    "displays the repository name for role %s",
+    async (role) => {
+      const { getByTestId } = render(
+        <TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294}/>
+      );
 
 			await waitFor(() => {
 				const repoName = getByTestId("repoNameTitle");
@@ -78,7 +78,7 @@ describe("TDDChartPage", () => {
 
 	it("displays the error message when the API request fails", async () => {
 		const { getByTestId } = render(
-			<TDDChartPage port={new MockGithubAPIError()} role="admin" teacher_id={294} graphs="graph" />
+			<TDDChartPage port={new MockGithubAPIError()} role="admin" teacher_id={294}/>
 		);
 
 		await waitFor(() => {
