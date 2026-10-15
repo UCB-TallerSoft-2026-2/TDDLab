@@ -68,8 +68,6 @@ export function useTDDChartPage({
   const [commitsTddCycles, setCommitsTddCycles] = useState<CommitCycle[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const defaultMetric = getDefaultMetric(graphs);
-
   useEffect(() => {
     if (stateSubmissions?.length) {
       setFetchedSubmissions(stateSubmissions);
@@ -166,7 +164,6 @@ export function useTDDChartPage({
     if (currentIndex > 0) {
       const previousIndex = currentIndex - 1;
       const previousSubmission = fetchedSubmissions[previousIndex];
-      localStorage.setItem("selectedMetric", defaultMetric);
       navigate(`?${getRepoQuery(previousSubmission)}&assignmentId=${assignmentId}`, {
         state: { fetchedSubmissions },
       });
@@ -178,7 +175,6 @@ export function useTDDChartPage({
     if (currentIndex < fetchedSubmissions.length - 1) {
       const nextIndex = currentIndex + 1;
       const nextSubmission = fetchedSubmissions[nextIndex];
-      localStorage.setItem("selectedMetric", defaultMetric);
       navigate(`?${getRepoQuery(nextSubmission)}&assignmentId=${assignmentId}`, {
         state: { fetchedSubmissions },
       });
