@@ -8,10 +8,10 @@ import {
   ventasISCommitOnlyLogs,
 } from '../presentation/tdd-visualization/fixtures/tddLogFixtures';
 import {
-  MockGithubAPI,
+  CommitHistoryRepositoryFake,
   convertToCommitDataObject,
-} from '../presentation/tdd-visualization/__mocks__/MocksCommitHistory';
-import { mockCommitDataArray } from '../presentation/tdd-visualization/__mocks__/dataTypeMocks/commitData';
+} from '../presentation/tdd-visualization/support/TDDVisualizationTestDoubles';
+import { commitFixtures } from '../presentation/tdd-visualization/fixtures/commitData';
 
 // Página de QA independiente: no modifica la ruta protegida /graph ni la sesión.
 // Reutiliza muestras locales y el renderizado real de Chart.js (sin mocks de dibujo).
@@ -21,8 +21,8 @@ const scenarios: Record<string, { label: string; logs: TDDLogEntry[] | null }> =
   missing: { label: 'Log no disponible', logs: null },
   executions: { label: 'Con ejecuciones exitosas y fallidas', logs: mixedTDDLogs },
 };
-const port = new MockGithubAPI();
-const commits = mockCommitDataArray.map(convertToCommitDataObject);
+const port = new CommitHistoryRepositoryFake();
+const commits = commitFixtures.map(convertToCommitDataObject);
 
 function ManualTDDValidation() {
   const [scenario, setScenario] = useState('commits');

@@ -1,15 +1,15 @@
 import { render, fireEvent } from '@testing-library/react';
 import TDDCycleCard from '../../../src/presentation/tdd-visualization/components/TDDCycleCard';
-import { mockCommitData } from './__mocks__/dataTypeMocks/commitData';
-import { convertToCommitDataObject } from './__mocks__/MocksCommitHistory'; 
+import { commitFixture } from "./fixtures/commitData";
+import { convertToCommitDataObject } from "./support/TDDVisualizationTestDoubles";
 import '@testing-library/jest-dom';
 
 describe('CycleCard component', () => {
-  const commitDataObject = convertToCommitDataObject(mockCommitData);
+  const commitDataObject = convertToCommitDataObject(commitFixture);
 
   it('renders the commit message', () => {
     const { getByText } = render(<TDDCycleCard commit={commitDataObject} />);
-    const commitMessageElement = getByText('Commit: Commit Mock commit message');
+    const commitMessageElement = getByText("Commit: Commit fixture message");
 
     expect(commitMessageElement).toBeInTheDocument();
   });

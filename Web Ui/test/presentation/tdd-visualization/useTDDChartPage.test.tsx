@@ -2,17 +2,18 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { CommitHistoryRepository } from "../../../src/modules/TDDCycles-Visualization/domain/CommitHistoryRepositoryInterface";
+import { DatabaseBranchHistory } from "../../../src/modules/TDDCycles-Visualization/domain/DatabaseBranchHistory";
 import {
   readTeacherSubmissions,
   saveTeacherSubmissions,
 } from "../../../src/shared/helpers/navigationHandlers";
 import { useTDDChartPage } from "../../../src/presentation/tdd-visualization/hooks/useTDDChartPage";
 import { Submission } from "../../../src/presentation/tdd-visualization/types/tddVisualization.types";
+import { fetchCommentsData } from "../../../src/presentation/tdd-visualization/services/tddVisualization.service";
 
 jest.mock("../../../src/presentation/tdd-visualization/services/tddVisualization.service", () => ({
   createTeacherComment: jest.fn(),
   fetchCommentsData: jest.fn().mockResolvedValue({ comments: [], emails: {} }),
-  fetchOwnerName: jest.fn().mockResolvedValue("Teacher"),
   fetchTDDVisualizationData: jest.fn().mockResolvedValue({
     commits: [],
     commitsTddCycles: [],
@@ -27,8 +28,8 @@ const submissions: Submission[] = [
 ];
 
 const port: CommitHistoryRepository = {
+  obtainBranchHistories: jest.fn().mockResolvedValue([] as DatabaseBranchHistory[]),
   obtainCommitsOfRepo: jest.fn().mockResolvedValue([]),
-  obtainUserName: jest.fn().mockResolvedValue("Teacher"),
   obtainCommitTddCycle: jest.fn().mockResolvedValue([]),
   obtainTDDLogs: jest.fn().mockResolvedValue([]),
 };
@@ -46,6 +47,7 @@ function ChartNavigationHarness() {
     <div>
       <output data-testid="current-index">{page.currentIndex}</output>
       <output data-testid="current-query">{location.search}</output>
+      <output data-testid="comments-error">{page.commentsError}</output>
       <button onClick={page.goToPreviousStudent}>Previous student</button>
       <button onClick={page.goToNextStudent}>Next student</button>
     </div>
@@ -56,6 +58,53 @@ describe("useTDDChartPage teacher navigation", () => {
   beforeEach(() => {
     sessionStorage.clear();
     saveTeacherSubmissions(7, submissions);
+    jest.mocked(fetchCommentsData).mockClear();
+  });
+
+  it("does not request comments when opening the student visualization", async () => {
+    function StudentChartHarness() {
+      useTDDChartPage({
+        graphs: "graph",
+        port,
+        role: "student",
+        teacher_id: 1,
+      });
+      return null;
+    }
+
+    render(
+      <MemoryRouter initialEntries={["/graph?repoOwner=student&repoName=repo&submissionId=10"]}>
+        <Routes>
+          <Route path="/graph" element={<StudentChartHarness />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(fetchCommentsData).not.toHaveBeenCalled();
+  });
+
+  it("shows a clear message when the comments endpoint cannot find the submission", async () => {
+    jest
+      .mocked(fetchCommentsData)
+      .mockRejectedValueOnce({ response: { status: 404 } });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/graph?repoOwner=student&repoName=first-repo&assignmentId=7&submissionId=10",
+        ]}
+      >
+        <Routes>
+          <Route path="/graph" element={<ChartNavigationHarness />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("comments-error")).toHaveTextContent(
+        "No se encontró la entrega asociada a estos comentarios.",
+      );
+    });
   });
 
   it("loads the selected assignment's submissions and navigates without putting them in the URL", async () => {

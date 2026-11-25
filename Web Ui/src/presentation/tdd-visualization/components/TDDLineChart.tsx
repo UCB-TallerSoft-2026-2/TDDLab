@@ -1,7 +1,7 @@
 import { CommitDataObject } from "../../../modules/TDDCycles-Visualization/domain/githubCommitInterfaces";
 import { getElementAtEvent, Line } from "react-chartjs-2";
 import { useRef, type MouseEvent } from "react";
-import { formatDate } from '../../../modules/TDDCycles-Visualization/application/GetTDDCycles';
+import { formatDateTime } from "../../../utils/dateUtils";
 
 import {
   Chart as ChartJS,
@@ -278,7 +278,7 @@ function TDDLineCharts({
               );
 
               afterBodyContent.push(
-                `Fecha: ${formatDate(getCommitStats()[3][context[0].dataIndex])}`,
+                `Fecha: ${formatDateTime(new Date(getCommitStats()[3][context[0].dataIndex]))}`,
               );
               
               const coverageValue = getCommitCoverage()[context[0].dataIndex];

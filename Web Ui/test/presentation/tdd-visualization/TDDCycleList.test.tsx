@@ -1,12 +1,12 @@
 import { render } from "@testing-library/react";
 import TDDCycleList from "../../../src/presentation/tdd-visualization/components/TDDCycleList";
-import { mockCommitData } from "./__mocks__/dataTypeMocks/commitData";
-import { convertToCommitDataObject } from "./__mocks__/MocksCommitHistory.ts"; 
+import { commitFixture } from "./fixtures/commitData";
+import { convertToCommitDataObject } from "./support/TDDVisualizationTestDoubles";
 import "@testing-library/jest-dom";
 
 describe("TDDCycleList Component", () => {
   test("renders a list of cycle cards when provided with commits and jobs data", () => {
-    const commitsInfo = [convertToCommitDataObject(mockCommitData)];
+    const commitsInfo = [convertToCommitDataObject(commitFixture)];
 
     render(
       <TDDCycleList commitsInfo={commitsInfo} />
@@ -16,7 +16,7 @@ describe("TDDCycleList Component", () => {
   });
 
   test("renders a list of cycle cards when commits and jobs don't match", () => {
-    const commitsInfo = [convertToCommitDataObject(mockCommitData)];
+    const commitsInfo = [convertToCommitDataObject(commitFixture)];
 
     render(
       <TDDCycleList commitsInfo={commitsInfo} />

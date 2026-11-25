@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import TDDCharts from '../../../src/presentation/tdd-visualization/components/TDDChart';
 import type { CommitDataObject } from '../../../src/modules/TDDCycles-Visualization/domain/githubCommitInterfaces';
 import type { TDDLogEntry } from '../../../src/modules/TDDCycles-Visualization/domain/TDDLogInterfaces';
-import { MockGithubAPI } from './__mocks__/MocksCommitHistory';
+import { CommitHistoryRepositoryFake } from './support/TDDVisualizationTestDoubles';
 import { dashboardTDDLogs, ventasISCommitOnlyLogs } from './fixtures/tddLogFixtures';
 
 // Se conserva el flujo real selector -> TDDLineCharts -> dashboard/ciclo.
@@ -65,7 +65,7 @@ const commits: CommitDataObject[] = [
 function renderCharts(tddLogs: TDDLogEntry[] | null) {
   const setMetric = jest.fn();
   const props = {
-    commits, tddLogs, metric: null, setMetric, port: new MockGithubAPI(),
+    commits, tddLogs, metric: null, setMetric, port: new CommitHistoryRepositoryFake(),
     role: 'student', commitsTddCycles: null, typegraphs: 'graph',
   };
   return { ...render(<TDDCharts {...props} />), props, setMetric };
@@ -218,7 +218,7 @@ describe('Integración de la visualización TDD', () => {
         tddLogs={null}
         metric={null}
         setMetric={setMetric}
-        port={new MockGithubAPI()}
+        port={new CommitHistoryRepositoryFake()}
         role="student"
         commitsTddCycles={null}
         typegraphs="graph"

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { getErrorResponseStatus } from "../../../shared/helpers/errorHelpers";
 import {
   readTeacherSubmissions,
 } from "../../../shared/helpers/navigationHandlers";
@@ -7,7 +8,6 @@ import { CommentDataObject } from "../../../modules/teacherCommentsOnSubmissions
 import {
   createTeacherComment,
   fetchCommentsData,
-  fetchOwnerName,
   fetchTDDVisualizationData,
 } from "../services/tddVisualization.service";
 import {
@@ -65,9 +65,9 @@ export function useTDDChartPage({
       ? fetchedSubmissions.findIndex((submission) => submission.id === submissionId)
       : 0,
   );
-  const [ownerName, setOwnerName] = useState("");
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<CommentDataObject[] | null>(null);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
   const [emails, setEmails] = useState<Record<number, string>>({});
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,32 +78,38 @@ export function useTDDChartPage({
 
   const defaultMetric = getDefaultMetric(graphs);
 
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
+    if (
+      !isTeacherView ||
+      !Number.isInteger(submissionIdcomments) ||
+      submissionIdcomments <= 0
+    ) {
+      setEmails({});
+      setComments([]);
+      setCommentsError(null);
+      return;
+    }
+
     try {
       const commentsData = await fetchCommentsData(submissionIdcomments);
       setEmails(commentsData.emails);
       setComments(commentsData.comments);
+      setCommentsError(null);
     } catch (error) {
-      console.error("Error obtaining comments:", error);
+      setEmails({});
+      setComments([]);
+      if (getErrorResponseStatus(error) === 404) {
+        setCommentsError("No se encontró la entrega asociada a estos comentarios.");
+        return;
+      }
+      setCommentsError("No se pudieron cargar los comentarios.");
+      throw error;
     }
-  };
+  }, [isTeacherView, submissionIdcomments]);
 
   useEffect(() => {
     loadComments().catch((error: unknown) => console.error("Error loading comments:", error));
-  }, [submissionIdcomments]);
-
-  useEffect(() => {
-    const loadOwnerName = async () => {
-      try {
-        const name = await fetchOwnerName(port, repoOwner);
-        setOwnerName(name);
-      } catch (error) {
-        console.error("Error obtaining owner name:", error);
-      }
-    };
-
-    loadOwnerName().catch((error: unknown) => console.error("Error loading owner name:", error));
-  }, [port, repoOwner]);
+  }, [loadComments]);
 
   useEffect(() => {
     const loadVisualizationData = async () => {
@@ -174,6 +180,7 @@ export function useTDDChartPage({
       tddLogsInfo,
     },
     comments,
+    commentsError,
     currentIndex,
     emails,
     feedback,
@@ -184,7 +191,7 @@ export function useTDDChartPage({
     isSubmitting,
     isStudent: studentRole,
     loading,
-    ownerName,
+    repoOwner,
     repoName,
     role,
     setFeedback,

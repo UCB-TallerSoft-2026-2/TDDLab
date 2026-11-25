@@ -13,7 +13,7 @@ function TDDChartPage(props: Readonly<CycleReportViewProps>) {
     <div className="container">
       <h1 data-testid="repoNameTitle">Tarea: {tddPage.repoName}</h1>
       {!tddPage.isStudent && (
-        <h1 data-testid="repoOwnerTitle">Autor: {tddPage.ownerName}</h1>
+        <h1 data-testid="repoOwnerTitle">Autor: {tddPage.repoOwner}</h1>
       )}
 
       {tddPage.loading && (
@@ -121,6 +121,11 @@ function TDDChartPage(props: Readonly<CycleReportViewProps>) {
             ))}
           </div>
         </div>
+      )}
+      {tddPage.commentsError && (
+        <p className="comments-error" role="alert">
+          {tddPage.commentsError}
+        </p>
       )}
     </div>
   );

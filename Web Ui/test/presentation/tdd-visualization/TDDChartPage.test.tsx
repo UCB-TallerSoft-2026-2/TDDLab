@@ -2,10 +2,10 @@ import { render, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import TDDChartPage from "../../../src/presentation/tdd-visualization/pages/TDDChartPage";
 import {
-  MockGithubAPI,
-  MockGithubAPIEmpty,
-  MockGithubAPIError,
-} from "./__mocks__/MocksCommitHistory";
+  CommitHistoryRepositoryFake,
+  EmptyCommitHistoryRepositoryFake,
+  FailingCommitHistoryRepositoryFake,
+} from "./support/TDDVisualizationTestDoubles";
 
 // Esta suite verifica la página, no el renderizado de Chart.js.
 // El selector y los símbolos tienen sus propias suites.
@@ -41,7 +41,7 @@ describe("TDDChartPage", () => {
     async (role) => {
       // El puerto devuelve métricas de commits y un log vacío.
       const { findByTestId, queryByTestId, queryByText } = render(
-        <TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294} graphs="graph" />
+        <TDDChartPage port={new CommitHistoryRepositoryFake()} role={role} teacher_id={294} graphs="graph" />
       );
 
       expect(await findByTestId("mock-tdd-charts")).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe("TDDChartPage", () => {
     "renders loading spinner when loading is true for role %s",
     async (role) => {
       const { getByTestId } = render(
-        <TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294} graphs="graph"/>
+        <TDDChartPage port={new CommitHistoryRepositoryFake()} role={role} teacher_id={294} graphs="graph"/>
       );
 
       await waitFor(() => {
@@ -68,7 +68,7 @@ describe("TDDChartPage", () => {
     "displays an error message when no data is available for role %s",
     async (role) => {
       const { getByTestId } = render(
-        <TDDChartPage port={new MockGithubAPIEmpty()} role={role} teacher_id={294} graphs="graph"/>
+        <TDDChartPage port={new EmptyCommitHistoryRepositoryFake()} role={role} teacher_id={294} graphs="graph"/>
       );
 
       await waitFor(() => {
@@ -82,7 +82,7 @@ describe("TDDChartPage", () => {
     "displays the repository name for role %s",
     async (role) => {
       const { getByTestId } = render(
-        <TDDChartPage port={new MockGithubAPI()} role={role} teacher_id={294} graphs="graph"/>
+        <TDDChartPage port={new CommitHistoryRepositoryFake()} role={role} teacher_id={294} graphs="graph"/>
       );
 
       await waitFor(() => {
@@ -92,6 +92,7 @@ describe("TDDChartPage", () => {
         if (role === "admin") {
           const repoOwner = getByTestId("repoOwnerTitle");
           expect(repoOwner).toBeInTheDocument();
+          expect(repoOwner).toHaveTextContent("Autor: exampleOwner");
         }
       });
     }
@@ -102,7 +103,7 @@ describe("TDDChartPage", () => {
     spyConsoleError.mockImplementation(() => {});
 
     await act(async () => {
-      render(<TDDChartPage port={new MockGithubAPIError()} role="admin" teacher_id={294} graphs="graph"/>);
+      render(<TDDChartPage port={new FailingCommitHistoryRepositoryFake()} role="admin" teacher_id={294} graphs="graph"/>);
     });
 
     expect(spyConsoleError).toHaveBeenCalledWith(
