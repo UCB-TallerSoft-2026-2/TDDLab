@@ -51,6 +51,10 @@ describe("setSessionCookie", () => {
 });
 
 describe("getSessionCookie", () => {
+  beforeEach(() => {
+    (axios.get as jest.Mock).mockClear();
+  });
+
     it("retrieves the session cookie successfully", async () => {
     const userData = {
       id: 1,
@@ -62,7 +66,10 @@ describe("getSessionCookie", () => {
 
     const result = await getSessionCookie();
 
-    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", { withCredentials: true });
+    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", {
+      withCredentials: true,
+      timeout: 5000,
+    });
     expect(result).toEqual(userData);
   });
 
@@ -71,7 +78,10 @@ describe("getSessionCookie", () => {
 
     const result = await getSessionCookie();
 
-    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", { withCredentials: true });
+    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", {
+      withCredentials: true,
+      timeout: 5000,
+    });
     expect(result).toBeNull();
   });
 
@@ -80,7 +90,10 @@ describe("getSessionCookie", () => {
 
     const result = await getSessionCookie();
 
-    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", { withCredentials: true });
+    expect(axios.get).toHaveBeenCalledWith(API_URL + "/user/me", {
+      withCredentials: true,
+      timeout: 5000,
+    });
     expect(result).toBeNull();
   });
 
@@ -96,6 +109,23 @@ describe("getSessionCookie", () => {
       "Error retrieving session cookie:",
       expect.any(Error)
     );
+  });
+
+  it("shares one pending request while the application restores the session", async () => {
+    const userData = {
+      id: 1,
+      email: "usuario@example.com",
+      groupid: 10,
+      role: "student",
+    };
+    (axios.get as jest.Mock).mockResolvedValueOnce({ data: userData });
+
+    const firstRequest = getSessionCookie();
+    const secondRequest = getSessionCookie();
+
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    await expect(firstRequest).resolves.toEqual(userData);
+    await expect(secondRequest).resolves.toEqual(userData);
   });
 });
 
