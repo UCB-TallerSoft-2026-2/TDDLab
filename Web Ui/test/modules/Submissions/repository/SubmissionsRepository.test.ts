@@ -1,6 +1,6 @@
 import axios from "axios";
 import SubmissionRepository from "../../../../src/modules/Submissions/Repository/SubmissionRepository";
-import { submissionInProgressDataMock } from "../../__mocks__/submissions/data/submissionDataMock";
+import { submissionInProgressFixture } from "../../__mocks__/submissions/data/submissionFixture";
 import { SubmissionUpdateObject } from "../../../../src/modules/Submissions/Domain/submissionInterfaces";
 
 const axiosPostSpy = jest.spyOn(axios, 'post');
@@ -9,16 +9,16 @@ const mockRepository = new SubmissionRepository();
 
 describe('persisted task state', () => {
     it('returns the saved submission, including its ID, after starting', async () => {
-        axiosPostSpy.mockResolvedValue({ status: 201, data: submissionInProgressDataMock });
-        await expect(mockRepository.createSubmission(submissionInProgressDataMock))
-            .resolves.toEqual(submissionInProgressDataMock);
+        axiosPostSpy.mockResolvedValue({ status: 201, data: submissionInProgressFixture });
+        await expect(mockRepository.createSubmission(submissionInProgressFixture))
+            .resolves.toEqual(submissionInProgressFixture);
         expect(axiosPostSpy).toHaveBeenLastCalledWith(
-            expect.stringContaining('/submissions'), submissionInProgressDataMock, { withCredentials: true }
+            expect.stringContaining('/submissions'), submissionInProgressFixture, { withCredentials: true }
         );
     });
 
     it('returns the confirmed delivered state after finishing', async () => {
-        const delivered = { ...submissionInProgressDataMock, status: 'delivered' };
+        const delivered = { ...submissionInProgressFixture, status: 'delivered' };
         const put = jest.spyOn(axios, 'put').mockResolvedValue({ status: 200, data: delivered });
         await expect(mockRepository.finishSubmission(delivered.id, delivered)).resolves.toEqual(delivered);
         expect(put).toHaveBeenLastCalledWith(
@@ -43,13 +43,13 @@ describe('persisted task state', () => {
 describe('Create submission', () => {
     it('should create an submission successfully', async () => {
         axiosPostSpy.mockResolvedValue({ status: 201 });
-        await expect(mockRepository.createSubmission(submissionInProgressDataMock)).resolves.not.toThrowError();
+        await expect(mockRepository.createSubmission(submissionInProgressFixture)).resolves.not.toThrowError();
     });
 })
 
 describe('getSubmissionsByAssignmentId', () => {
     it('should return a list of submissions if the request is successful', async () => {
-        const mockSubmissions = [submissionInProgressDataMock];
+        const mockSubmissions = [submissionInProgressFixture];
         const mockResponse = { data: mockSubmissions, status: 200 };
         axiosGetSpy.mockResolvedValue(mockResponse);
 
@@ -112,7 +112,7 @@ describe('getSubmissionsByAssignmentId', () => {
     describe('getSubmissionbyUserandSubmissionId', () => {
         it('should return a submission object when the request is successful', async () => {
 
-            const mockSubmission = submissionInProgressDataMock;
+            const mockSubmission = submissionInProgressFixture;
             const mockResponse = { data: mockSubmission, status: 200 };
             axiosGetSpy.mockResolvedValue(mockResponse);
 

@@ -1,6 +1,6 @@
 import { SubmissionDataObject } from "../../../../../src/modules/Submissions/Domain/submissionInterfaces";
 
-export const submissionInProgressDataMock: SubmissionDataObject = {
+export const submissionInProgressFixture: SubmissionDataObject = {
     id: 3,
     assignmentid: 2,
     userid: 1,

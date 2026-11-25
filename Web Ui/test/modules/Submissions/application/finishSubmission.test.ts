@@ -1,11 +1,11 @@
 import { SubmissionUpdateObject } from '../../../../src/modules/Submissions/Domain/submissionInterfaces';
 import { FinishSubmission } from '../../../../src/modules/Submissions/Aplication/finishSubmission';
-import { MockSubmissionRepository } from "../../__mocks__/submissions/mockSubmissionsRepository";
+import { SubmissionRepositoryFake } from "../../__mocks__/submissions/SubmissionRepositoryFake";
 
-let mockSubmissionRepository: MockSubmissionRepository;
+let mockSubmissionRepository: SubmissionRepositoryFake;
 let finishSubmission: FinishSubmission;
 beforeEach(() => {
-    mockSubmissionRepository = new MockSubmissionRepository();
+    mockSubmissionRepository = new SubmissionRepositoryFake();
     finishSubmission = new FinishSubmission(mockSubmissionRepository);
 });
 

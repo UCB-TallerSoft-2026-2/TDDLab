@@ -1,8 +1,8 @@
 import { GetCommentsBySubmissionId } from "../../../../src/modules/teacherCommentsOnSubmissions/application/GetComments";
 import { CommentDataObject } from "../../../../src/modules/teacherCommentsOnSubmissions/domain/CommentsInterface";
-import { MockTeacherCommentsRepository } from "../../__mocks__/submissions/mockTeacherCommentsRepository";
+import { TeacherCommentsRepositoryFake } from "../../__mocks__/submissions/TeacherCommentsRepositoryFake";
 
-const commentDataMock: CommentDataObject = {
+const commentFixture: CommentDataObject = {
     id: 1,
     submission_id: 129,
     teacher_id: 42,
@@ -10,18 +10,18 @@ const commentDataMock: CommentDataObject = {
     created_at: new Date(),
 };
 
-let mockRepository: MockTeacherCommentsRepository;
+let mockRepository: TeacherCommentsRepositoryFake;
 let getCommentsBySubmissionId: GetCommentsBySubmissionId;
 
 beforeEach(() => {
-    mockRepository = new MockTeacherCommentsRepository();
+    mockRepository = new TeacherCommentsRepositoryFake();
     getCommentsBySubmissionId = new GetCommentsBySubmissionId(mockRepository);
 });
 
 describe("GetCommentsBySubmissionId", () => {
     it("should return a list of comments for a given submission ID", async () => {
         const submissionId = 129;
-        const mockComments: CommentDataObject[] = [commentDataMock];
+        const mockComments: CommentDataObject[] = [commentFixture];
         
         mockRepository.getCommentsBySubmissionId.mockResolvedValue(mockComments);
 

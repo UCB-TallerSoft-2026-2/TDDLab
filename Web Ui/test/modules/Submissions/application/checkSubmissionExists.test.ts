@@ -1,11 +1,11 @@
 import { CheckSubmissionExists } from "../../../../src/modules/Submissions/Aplication/checkSubmissionExists";
-import { MockSubmissionRepository } from "../../__mocks__/submissions/mockSubmissionsRepository";
+import { SubmissionRepositoryFake } from "../../__mocks__/submissions/SubmissionRepositoryFake";
 
-let mockRepository: MockSubmissionRepository;
+let mockRepository: SubmissionRepositoryFake;
 let checkSubmission: CheckSubmissionExists;
 
 beforeEach(() => {
-    mockRepository = new MockSubmissionRepository();
+    mockRepository = new SubmissionRepositoryFake();
     checkSubmission = new CheckSubmissionExists(mockRepository);
 });
 

@@ -1,20 +1,20 @@
 import { GetSubmissionsByAssignmentId } from "../../../../src/modules/Submissions/Aplication/getSubmissionsByAssignmentId";
 import { SubmissionDataObject } from "../../../../src/modules/Submissions/Domain/submissionInterfaces";
-import { MockSubmissionRepository } from "../../__mocks__/submissions/mockSubmissionsRepository";
-import { submissionInProgressDataMock } from "../../__mocks__/submissions/data/submissionDataMock";
+import { SubmissionRepositoryFake } from "../../__mocks__/submissions/SubmissionRepositoryFake";
+import { submissionInProgressFixture } from "../../__mocks__/submissions/data/submissionFixture";
 
-let mockRepository: MockSubmissionRepository;
+let mockRepository: SubmissionRepositoryFake;
 let getSubmissionsByAssignmentId: GetSubmissionsByAssignmentId;
 
 beforeEach(() => {
-    mockRepository = new MockSubmissionRepository();
+    mockRepository = new SubmissionRepositoryFake();
     getSubmissionsByAssignmentId = new GetSubmissionsByAssignmentId(mockRepository);
 });
 
 describe("GetSubmissionsByAssignmentId", () => {
     it("should return a list of submissions for a given assignment ID", async () => {
         const assignmentId = 2;
-        const mockSubmissions: SubmissionDataObject[] = [submissionInProgressDataMock];
+        const mockSubmissions: SubmissionDataObject[] = [submissionInProgressFixture];
         mockRepository.getSubmissionsByAssignmentId.mockResolvedValue(mockSubmissions);
 
         const result = await getSubmissionsByAssignmentId.getSubmissionsByAssignmentId(assignmentId);

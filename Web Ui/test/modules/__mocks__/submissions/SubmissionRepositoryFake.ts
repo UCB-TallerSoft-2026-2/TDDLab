@@ -1,7 +1,7 @@
 import SubmissionRepositoryInterface from "../../../../src/modules/Submissions/Domain/SubmissionRepositoryInterface";
 import { SubmissionDataObject } from "../../../../src/modules/Submissions/Domain/submissionInterfaces";
 
-export class MockSubmissionRepository implements SubmissionRepositoryInterface {
+export class SubmissionRepositoryFake implements SubmissionRepositoryInterface {
   private readonly submissions: SubmissionDataObject[] = [];
 
   createSubmission = jest.fn(async (submissionData: SubmissionDataObject) => {
