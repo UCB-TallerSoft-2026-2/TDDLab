@@ -3,6 +3,9 @@ export interface CommitDataObject {
   stats: Stats;
   commit: Commit;
   sha: string;
+  branch?: string;
+  parent_sha?: string;
+  author?: string;
   coverage: number;
   test_count: number;
   conclusion: string;
