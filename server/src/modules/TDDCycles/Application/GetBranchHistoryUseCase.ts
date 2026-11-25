@@ -14,6 +14,13 @@ export class GetBranchHistoryUseCase {
 
   async execute(owner: string, repoName: string, branch: string): Promise<BranchHistoryData | null> {
     try {
+      const repository = await this.branchRepository.getRepository(
+        `${owner}/${repoName}`
+      );
+      if (repository) {
+        return await this.branchRepository.getBranchHistory(owner, repoName, branch);
+      }
+
       const useNewGen = await this.githubRepository.checkNewGenFile(owner, repoName);
 
       if (useNewGen) {

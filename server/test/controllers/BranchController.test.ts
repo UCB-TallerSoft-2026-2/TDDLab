@@ -42,6 +42,17 @@ describe('BranchController', () => {
             expect(mockResponse.json).toHaveBeenCalledWith(expectedHistory);
         });
 
+        it('should accept branch names containing path separators', async () => {
+            const expectedHistory = { branch: { name: 'feature/login' }, commits: [] };
+            mockRequest.query = { owner: 'owner', repoName: 'repoName', branch: 'feature/login' };
+            (controller as any).getBranchHistoryUseCase.execute = jest.fn().mockResolvedValue(expectedHistory);
+
+            await controller.getBranchHistory(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(expectedHistory);
+        });
+
         it('should return 500 if an error is thrown', async () => {
             mockRequest.query = { owner: 'owner', repoName: 'repoName', branch: 'main' };
             (controller as any).getBranchHistoryUseCase.execute = jest.fn().mockRejectedValue(new Error('fail'));
@@ -100,6 +111,7 @@ describe('BranchController', () => {
 
         it('should return default main branch when not new gen', async () => {
             mockRequest.query = { owner: 'owner', repoName: 'repoName' };
+            (controller as any).branchRepository.getRepository = jest.fn().mockResolvedValue(null);
             (controller as any).githubRepository.checkNewGenFile = jest.fn().mockResolvedValue(false);
 
             await controller.getBranches(mockRequest as Request, mockResponse as Response);
@@ -108,6 +120,20 @@ describe('BranchController', () => {
             expect(mockResponse.json).toHaveBeenCalledWith([
                 { name: 'main', repository_slug: 'owner/repoName' },
             ]);
+        });
+
+        it('should return database branches before checking the GitHub marker', async () => {
+            const branches = [{ name: 'feature/db', repository_slug: 'owner/repoName' }];
+            mockRequest.query = { owner: 'owner', repoName: 'repoName' };
+            (controller as any).branchRepository.getRepository = jest.fn().mockResolvedValue({ slug: 'repo-id' });
+            (controller as any).branchRepository.getBranches = jest.fn().mockResolvedValue(branches);
+            (controller as any).githubRepository.checkNewGenFile = jest.fn();
+
+            await controller.getBranches(mockRequest as Request, mockResponse as Response);
+
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith(branches);
+            expect((controller as any).githubRepository.checkNewGenFile).not.toHaveBeenCalled();
         });
     });
 

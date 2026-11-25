@@ -1,5 +1,13 @@
 import { MergeInfo } from "./IMergeInfo";
 
+export interface TddExecutionData {
+  id: number;
+  tests_total: number;
+  tests_passed: number;
+  tests_failed: number;
+  executed_at: Date;
+}
+
 export interface CommitHistoryData {
   repository_slug:string;
   branch: string;
@@ -22,5 +30,6 @@ export interface CommitHistoryData {
   coverage: number;
   test_count: number;
   conclusion: string;
+  executions?: TddExecutionData[];
   merge?: MergeInfo
 }

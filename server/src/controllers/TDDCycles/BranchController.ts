@@ -37,6 +37,23 @@ class BranchController {
     );
   }
 
+  isValidBranchName(value: unknown): value is string {
+    if (typeof value !== "string" || value.length === 0 || value.length > 255) {
+      return false;
+    }
+
+    return value.split("/").every(
+      (segment) =>
+        segment.length > 0 &&
+        segment.length <= 100 &&
+        /^[A-Za-z0-9._-]+$/.test(segment) &&
+        !segment.startsWith(".") &&
+        !segment.endsWith(".") &&
+        !segment.endsWith(".lock") &&
+        !segment.includes(".."),
+    );
+  }
+
   async getBranchHistory(req: Request, res: Response) {
     try {
       const ownerRaw = req.query.owner;
@@ -52,7 +69,7 @@ class BranchController {
       if (
         !this.isValidGithubSegment(ownerRaw) ||
         !this.isValidGithubSegment(repoNameRaw) ||
-        !this.isValidGithubSegment(branchRaw)
+        !this.isValidBranchName(branchRaw)
       ) {
         return res.status(400).json({
           error: "Bad request, invalid owner, repoName or branch",
@@ -232,24 +249,24 @@ class BranchController {
         return res.status(400).json({ error: "Bad request, invalid owner or repoName" });
       }
 
+      const repositorySlug = `${owner}/${repoName}`;
+      const repository = await this.branchRepository.getRepository(repositorySlug);
+      if (repository) {
+        const branches = await this.branchRepository.getBranches(repositorySlug);
+        return res.status(200).json(branches);
+      }
+
       const useNewGen = await this.githubRepository.checkNewGenFile(
         String(owner),
         String(repoName)
       );
-
       if (!useNewGen) {
         return res.status(200).json([
-          { name: "main", repository_slug: `${owner}/${repoName}` },
+          { name: "main", repository_slug: repositorySlug },
         ]);
       }
 
-      const repo = await this.branchRepository.getRepository(`${owner}/${repoName}`);
-      if (!repo) {
-        return res.status(200).json([]);
-      }
-
-      const branches = await this.branchRepository.getBranches(`${owner}/${repoName}`);
-      return res.status(200).json(branches);
+      return res.status(200).json([]);
     } catch (error) {
       console.error("Error getting branches:", error);
       return res.status(500).json({ error: "Server error" });

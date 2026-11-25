@@ -1,11 +1,11 @@
 import { Pool } from "pg";
-import config from "../../../config/db";
+import { branchDatabaseConfig } from "../../../config/db";
 import { IBranchRepository } from "../Domain/IBranchRepository";
 import { BranchData } from "../Domain/BranchData";
 import { BranchHistoryData } from "../Domain/BranchData";
 import { MergeInfo } from "../Domain/IMergeInfo";
 import { RepositorySata } from "../Domain/IRepositoryData";
-import { CommitHistoryData } from "../Domain/ICommitHistoryData";
+import { CommitHistoryData, TddExecutionData } from "../Domain/ICommitHistoryData";
 import {
   TddRepositoryRequest,
   TddRepositoryResponse,
@@ -17,7 +17,7 @@ import {
 export class DBBranchRepository implements IBranchRepository {
   pool: Pool;
   constructor() {
-    this.pool = new Pool(config);
+    this.pool = new Pool(branchDatabaseConfig);
   }
 
   private splitSlug(slug: string): { owner: string; repoName: string } {
@@ -49,6 +49,7 @@ export class DBBranchRepository implements IBranchRepository {
 
   async saveRepository(repo: TddRepositoryRequest): Promise<TddRepositoryResponse> {
     const { owner, repoName } = this.splitSlug(repo.slug);
+    const remoteUrl = repo.remoteUrl ?? `https://github.com/${repo.slug}`;
     const client = await this.pool.connect();
     try {
       const existing = await this.getRepository(repo.slug);
@@ -65,13 +66,13 @@ export class DBBranchRepository implements IBranchRepository {
         VALUES ($1, $2, $3)
         RETURNING id, created_at
       `;
-      const values = [repoName, repo.remoteUrl ?? null, owner];
+      const values = [repoName, remoteUrl, owner];
       const result = await client.query(query, values);
       const row = result.rows[0];
       return {
         id: Number(row.id),
         slug: repo.slug,
-        remoteUrl: repo.remoteUrl,
+        remoteUrl,
         createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
       };
     } catch (error) {
@@ -218,7 +219,7 @@ export class DBBranchRepository implements IBranchRepository {
       await client.query("BEGIN");
       try {
         const commitQuery = `
-          INSERT INTO tdd_commit (sha, parent_sha, branchi_id, author, message, committed_at)
+          INSERT INTO tdd_commit (sha, parent_sha, branch_id, author, message, committed_at)
           VALUES ($1, $2, $3, $4, $5, $6)
           ON CONFLICT (sha) DO NOTHING
         `;
@@ -349,34 +350,79 @@ export class DBBranchRepository implements IBranchRepository {
         merge_into: "",
       };
       const commitQuery = `
-        SELECT sha, parent_sha, author, message, committed_at FROM tdd_commit
-        WHERE branchi_id = $1
-        ORDER BY committed_at DESC
+        SELECT
+          c.sha, c.parent_sha, c.author, c.message, c.committed_at,
+          e.id AS execution_id, e.tests_total, e.tests_passed, e.tests_failed,
+          e.executed_at
+        FROM tdd_commit c
+        LEFT JOIN tdd_execution e ON e.commit_sha = c.sha
+        WHERE c.branch_id = $1
+        ORDER BY c.committed_at DESC, e.executed_at ASC, e.id ASC
       `;
       const commitResult = await client.query(commitQuery, [branchRow.id]);
-      const commits: CommitHistoryData[] = commitResult.rows.map((row: any) => ({
-        repository_slug: slug,
-        branch,
-        html_url: `https://github.com/${owner}/${repoName}/commit/${row.sha}`,
-        sha: row.sha,
-        parent_sha: row.parent_sha,
-        author: row.author,
-        stats: {
-          total: 0,
-          additions: 0,
-          deletions: 0,
-          date: "",
-        },
-        commit: {
-          date: row.committed_at ? new Date(row.committed_at) : new Date(),
-          message: row.message,
-          url: `https://github.com/${owner}/${repoName}/commit/${row.sha}`,
-          comment_count: 0,
-        },
-        coverage: 0,
-        test_count: 0,
-        conclusion: "",
-      }));
+      type BranchHistoryRow = {
+        sha: string;
+        parent_sha: string | null;
+        author: string | null;
+        message: string;
+        committed_at: Date | string | null;
+        execution_id: number | null;
+        tests_total: number | null;
+        tests_passed: number | null;
+        tests_failed: number | null;
+        executed_at: Date | null;
+      };
+      const commitsBySha = new Map<string, CommitHistoryData>();
+
+      for (const row of commitResult.rows as BranchHistoryRow[]) {
+        let commit = commitsBySha.get(row.sha);
+        if (!commit) {
+          const commitUrl = `https://github.com/${owner}/${repoName}/commit/${row.sha}`;
+          commit = {
+            repository_slug: slug,
+            branch,
+            html_url: commitUrl,
+            sha: row.sha,
+            parent_sha: row.parent_sha ?? undefined,
+            author: row.author ?? undefined,
+            stats: {
+              total: 0,
+              additions: 0,
+              deletions: 0,
+              date: "",
+            },
+            commit: {
+              date: row.committed_at ? new Date(row.committed_at) : new Date(),
+              message: row.message,
+              url: commitUrl,
+              comment_count: 0,
+            },
+            coverage: 0,
+            test_count: 0,
+            conclusion: "",
+            executions: [],
+          };
+          commitsBySha.set(row.sha, commit);
+        }
+
+        if (row.execution_id !== null) {
+          const execution: TddExecutionData = {
+            id: row.execution_id,
+            tests_total: row.tests_total ?? 0,
+            tests_passed: row.tests_passed ?? 0,
+            tests_failed: row.tests_failed ?? 0,
+            executed_at: row.executed_at ?? new Date(),
+          };
+          commit.executions?.push(execution);
+          commit.test_count = execution.tests_total;
+          commit.conclusion = execution.tests_failed === 0 ? "success" : "failure";
+        }
+      }
+
+      const commits = [...commitsBySha.values()];
+      branchData.commit_count = commits.length;
+      branchData.last_commit_sha = commits[0]?.sha ?? "";
+      branchData.last_commit_at = commits[0]?.commit.date ?? new Date();
       return {
         branch: branchData,
         commits,
