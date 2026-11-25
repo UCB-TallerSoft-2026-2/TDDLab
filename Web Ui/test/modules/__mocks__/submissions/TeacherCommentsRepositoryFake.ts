@@ -1,7 +1,7 @@
 import { CommentsCreationObject, CommentDataObject } from "../../../../src/modules/teacherCommentsOnSubmissions/domain/CommentsInterface";
 import TeacherCommentsRepositoryInterface from "../../../../src/modules/teacherCommentsOnSubmissions/domain/CommentsRepositoryInterface";
 
-export class MockTeacherCommentsRepository implements TeacherCommentsRepositoryInterface {
+export class TeacherCommentsRepositoryFake implements TeacherCommentsRepositoryInterface {
   private readonly comments: CommentDataObject[] = []; 
 
   getCommentsBySubmissionId = jest.fn(async (submissionId: number): Promise<CommentDataObject[]> => {

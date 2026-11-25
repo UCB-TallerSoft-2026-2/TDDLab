@@ -1,20 +1,20 @@
 // test/modules/teacherCommentsOnSubmissions/application/GetCommentsBySubmissionId.test.ts
 import { GetCommentsBySubmissionId } from "../../../../src/modules/teacherCommentsOnSubmissions/application/GetComments";
-import { MockTeacherCommentsRepository } from "../../__mocks__/submissions/mockTeacherCommentsRepository";
-import { commentDataMock } from "../../__mocks__/submissions/commentDataMock";
+import { TeacherCommentsRepositoryFake } from "../../__mocks__/submissions/TeacherCommentsRepositoryFake";
+import { teacherCommentFixture } from "../../__mocks__/submissions/teacherCommentFixture";
 
 describe('GetCommentsBySubmissionId', () => {
-    let mockRepository: MockTeacherCommentsRepository;
+    let mockRepository: TeacherCommentsRepositoryFake;
     let getComments: GetCommentsBySubmissionId;
 
     beforeEach(() => {
-        mockRepository = new MockTeacherCommentsRepository();
+        mockRepository = new TeacherCommentsRepositoryFake();
         getComments = new GetCommentsBySubmissionId(mockRepository);
     });
 
     it('should successfully get comments by submission ID', async () => {
         const mockComments = [{
-            ...commentDataMock,
+            ...teacherCommentFixture,
             id: 1,
             created_at: new Date()
         }];

@@ -1,6 +1,6 @@
 import TeacherCommentsRepository from "../../../../src/modules/teacherCommentsOnSubmissions/repository/CommentsRepository";
 import axios from "axios";
-import { commentDataMock } from "../../__mocks__/submissions/commentDataMock";
+import { teacherCommentFixture } from "../../__mocks__/submissions/teacherCommentFixture";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -12,7 +12,7 @@ const API_URL = process.env.VITE_API_URL + '/commentsSubmission';
 
 describe('Get comments by submission ID', () => {
     it('should fetch comments successfully', async () => {
-        const mockComments = [commentDataMock];
+        const mockComments = [teacherCommentFixture];
         axiosGetSpy.mockResolvedValue({ status: 200, data: mockComments });
         
         const result = await mockRepository.getCommentsBySubmissionId(1);
@@ -36,26 +36,26 @@ describe('Get comments by submission ID', () => {
 describe('Create comment', () => {
     it('should create a comment successfully', async () => {
         const mockResponse = {
-            ...commentDataMock,
+            ...teacherCommentFixture,
             id: 1,
             created_at: new Date()
         };
         axiosPostSpy.mockResolvedValue({ status: 201, data: mockResponse });
         
-        const result = await mockRepository.createComment(commentDataMock);
+        const result = await mockRepository.createComment(teacherCommentFixture);
         expect(result).toEqual(mockResponse);
-        expect(axiosPostSpy).toHaveBeenCalledWith(API_URL, commentDataMock);
+        expect(axiosPostSpy).toHaveBeenCalledWith(API_URL, teacherCommentFixture);
     });
 
     it('should handle comment creation failure', async () => {
         axiosPostSpy.mockResolvedValue({ status: 400 });
-        await expect(mockRepository.createComment(commentDataMock))
+        await expect(mockRepository.createComment(teacherCommentFixture))
             .rejects.toThrowError("Failed to create comment");
     });
 
     it('should handle network error during creation', async () => {
         axiosPostSpy.mockRejectedValue(new Error("Network Error"));
-        await expect(mockRepository.createComment(commentDataMock))
+        await expect(mockRepository.createComment(teacherCommentFixture))
             .rejects.toThrowError("Network Error");
     });
 });
